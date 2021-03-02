@@ -368,7 +368,7 @@ class ReceiveTextDialog extends Dialog {
 
     async _onCopy() {
         await navigator.clipboard.writeText(this.$text.textContent);
-        Events.fire('notify-user', 'Copied to clipboard');
+        Events.fire('notify-user', '已复制到剪切板');
     }
 }
 
@@ -381,7 +381,7 @@ class Toast extends Dialog {
     _onNotfiy(message) {
         this.$el.textContent = message;
         this.show();
-        setTimeout(_ => this.hide(), 3000);
+        setTimeout(_ => this.hide(), 5000);
     }
 }
 
@@ -408,7 +408,7 @@ class Notifications {
                 Events.fire('notify-user', Notifications.PERMISSION_ERROR || 'Error');
                 return;
             }
-            this._notify('Even more snappy sharing!');
+            this._notify('通知功能已启用');
             this.$button.setAttribute('hidden', 1);
         });
     }
@@ -437,16 +437,16 @@ class Notifications {
 
     _messageNotification(message) {
         if (isURL(message)) {
-            const notification = this._notify(message, 'Click to open link');
+            const notification = this._notify(message, '点击打开链接');
             this._bind(notification, e => window.open(message, '_blank', null, true));
         } else {
-            const notification = this._notify(message, 'Click to copy text');
+            const notification = this._notify(message, '点击复制文本');
             this._bind(notification, e => this._copyText(message, notification));
         }
     }
 
     _downloadNotification(message) {
-        const notification = this._notify(message, 'Click to download');
+        const notification = this._notify(message, '点击下载');
         if (!window.isDownloadSupported) return;
         this._bind(notification, e => this._download(notification));
     }
@@ -459,7 +459,7 @@ class Notifications {
     _copyText(message, notification) {
         notification.close();
         if (!navigator.clipboard.writeText(message)) return;
-        this._notify('Copied text to clipboard');
+        this._notify('已复制到剪切板');
     }
 
     _bind(notification, handler) {
@@ -483,11 +483,11 @@ class NetworkStatusUI {
     }
 
     _showOfflineMessage() {
-        Events.fire('notify-user', 'You are offline');
+        Events.fire('notify-user', '网络连接中断');
     }
 
     _showOnlineMessage() {
-        Events.fire('notify-user', 'You are back online');
+        Events.fire('notify-user', '网络连接恢复');
     }
 }
 
@@ -615,10 +615,7 @@ Events.on('load', () => {
 });
 
 Notifications.PERMISSION_ERROR = `
-Notifications permission has been blocked
-as the user has dismissed the permission prompt several times.
-This can be reset in Page Info
-which can be accessed by clicking the lock icon next to the URL.`;
+因用户拒绝授权，通知功能被禁止，您可点击网址栏左侧的小锁图标修改通知权限。`;
 
 document.body.onclick = e => { // safari hack to fix audio
     document.body.onclick = null;

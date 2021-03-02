@@ -265,7 +265,7 @@ x-peer[transfer] x-icon {
 }
 
 x-peer[transfer] .status:before {
-    content: 'Transferring...';
+    content: '正在传送…';
 }
 
 x-peer:not([transfer]) .status,
