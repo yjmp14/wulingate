@@ -204,14 +204,23 @@ class Peer {
     _setName(req) {
         let ua = parser(req.headers['user-agent']);
 
-        let deviceName = ua.os.name.replace('Mac OS', 'Mac') + ' ';
+
+        let deviceName = '';
+        
+        if (ua.os && ua.os.name) {
+            deviceName = ua.os.name.replace('Mac OS', 'Mac') + ' ';
+        }
+        
         if (ua.device.model) {
             deviceName += ua.device.model;
         } else {
             deviceName += ua.browser.name;
         }
-		
-		var randomNum = '';
+
+        if(!deviceName)
+            deviceName = '未知设备';
+
+        var randomNum = '';
 		for (var i = 0; i < 4; i++) {
 			randomNum += Math.floor(Math.random() * 10);
 		}
