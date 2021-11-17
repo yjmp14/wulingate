@@ -12,7 +12,7 @@
 
 Have any questions? Read our [FAQ](/docs/faq.md).
 
-You can [host your own instance with docker](/docs/local-dev.md).
+You can [host your own instance with Docker](/docs/local-dev.md).
 
 
 ## Support the Snapdrop Community
@@ -29,4 +29,4 @@ Alternatively, you can become a [Github Sponsor](https://github.com/sponsors/Rob
 Thanks a lot for supporting free and open software!
 
 
-
+ 

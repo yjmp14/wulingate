@@ -722,6 +722,12 @@ x-dialog x-paper {
     color: var(--text-color);
     background-color: var(--bg-color-secondary);
 }
+/* Image Preview */
+#img-preview{
+    max-height: 50vh;
+    margin: auto;
+    display: block;
+}
 
 
 /* Styles for users who prefer dark mode at the OS level */
@@ -753,3 +759,4 @@ x-dialog x-paper {
         overflow: hidden;
     }
 }
+
