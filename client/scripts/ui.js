@@ -9,7 +9,7 @@ window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 Events.on('display-name', e => {
     const me = e.detail.message;
     const $displayName = $('displayName')
-    $displayName.textContent = 'Your device code is ' + me.displayName;
+    $displayName.textContent = 'Your device code is: ' + me.displayName;
     $displayName.title = me.deviceName;
 });
 
@@ -415,7 +415,7 @@ class Notifications {
                 Events.fire('notify-user', Notifications.PERMISSION_ERROR || 'Error');
                 return;
             }
-            this._notify('Notification enabled.');
+            this._notify('Notifications enabled.');
             this.$button.setAttribute('hidden', 1);
         });
     }
