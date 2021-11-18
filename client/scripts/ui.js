@@ -9,7 +9,7 @@ window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 Events.on('display-name', e => {
     const me = e.detail.message;
     const $displayName = $('displayName')
-    $displayName.textContent = 'You are known as ' + me.displayName;
+    $displayName.textContent = 'Your device code is ' + me.displayName;
     $displayName.title = me.deviceName;
 });
 
@@ -388,7 +388,7 @@ class Toast extends Dialog {
     _onNotfiy(message) {
         this.$el.textContent = message;
         this.show();
-        setTimeout(_ => this.hide(), 3000);
+        setTimeout(_ => this.hide(), 5000);
     }
 }
 
@@ -415,7 +415,7 @@ class Notifications {
                 Events.fire('notify-user', Notifications.PERMISSION_ERROR || 'Error');
                 return;
             }
-            this._notify('Even more snappy sharing!');
+            this._notify('Notification enabled.');
             this.$button.setAttribute('hidden', 1);
         });
     }

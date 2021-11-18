@@ -36,6 +36,7 @@ body {
 
 .row {
     display: flex;
+    justify-content: center;
     flex-direction: row;
 }
 
@@ -227,6 +228,7 @@ x-peer .name {
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
+    font-size: 18px;
 }
 
 input[type="file"] {
@@ -262,6 +264,10 @@ x-peer[transfer] x-icon {
 .device-name {
     height: 18px;
     opacity: 0.7;
+}
+
+.device-name {
+    font-size: 14px;
 }
 
 x-peer[transfer] .status:before {
@@ -697,7 +703,7 @@ body {
 /* Dark theme colors */
 body.dark-theme {
     --text-color: #eee;
-    --bg-color: #121212;
+    --bg-color: #2B2C2F;
     --bg-color-secondary: #333;
 }
 
@@ -731,7 +737,7 @@ x-dialog x-paper {
     /* defaults to dark theme */
     body {
         --text-color: #eee;
-        --bg-color: #121212;
+        --bg-color: #2B2C2F;
         --bg-color-secondary: #333;
     }
 
