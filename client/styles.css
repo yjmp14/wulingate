@@ -36,7 +36,7 @@ body {
 
 .row {
     display: flex;
-	justify-content: center;
+    justify-content: center;
     flex-direction: row;
 }
 
@@ -228,7 +228,7 @@ x-peer .name {
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
-	font-size: 18px;
+    font-size: 18px;
 }
 
 input[type="file"] {
@@ -267,7 +267,7 @@ x-peer[transfer] x-icon {
 }
 
 .device-name {
-	font-size: 14px;
+    font-size: 14px;
 }
 
 x-peer[transfer] .status:before {
