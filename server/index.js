@@ -207,7 +207,7 @@ class Peer {
         }
 
         if(!deviceName)
-            deviceName = 'Unknown Device';
+            deviceName = 'Unknown';
 
         var randomNum = '';
 		for (var i = 0; i < 4; i++) {
