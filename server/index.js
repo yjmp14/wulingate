@@ -19,7 +19,6 @@ class SnapdropServer {
         const WebSocket = require('ws');
         this._wss = new WebSocket.Server({ port: port });
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request)));
-        this._wss.on('headers', (headers, response) => this._onHeaders(headers, response));
 
         this._rooms = {};
 
@@ -39,12 +38,6 @@ class SnapdropServer {
                 deviceName: peer.name.deviceName
             }
         });
-    }
-
-    _onHeaders(headers, response) {
-        if (response.headers.cookie && response.headers.cookie.indexOf('peerid=') > -1) return;
-        response.peerId = Peer.uuid();
-        headers.push('Set-Cookie: peerid=' + response.peerId + "; SameSite=Strict; Secure");
     }
 
     _onMessage(sender, message) {
@@ -190,11 +183,7 @@ class Peer {
     }
 
     _setPeerId(request) {
-        if (request.peerId) {
-            this.id = request.peerId;
-        } else {
-            this.id = request.headers.cookie.replace('peerid=', '');
-        }
+        this.id = new URL(request.url, "http://server").searchParams.get("peerid");
     }
 
     toString() {
@@ -221,9 +210,9 @@ class Peer {
             deviceName = 'Unknown';
 
         var randomNum = '';
-		for (var i = 0; i < 4; i++) {
-			randomNum += Math.floor(Math.random() * 10);
-		}
+        for (var i = 0; i < 4; i++) {
+            randomNum += Math.floor(Math.random() * 10);
+        }
 
         const displayName = randomNum;
 
@@ -245,31 +234,6 @@ class Peer {
         }
     }
 
-    // return uuid of form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-    static uuid() {
-        let uuid = '',
-            ii;
-        for (ii = 0; ii < 32; ii += 1) {
-            switch (ii) {
-                case 8:
-                case 20:
-                    uuid += '-';
-                    uuid += (Math.random() * 16 | 0).toString(16);
-                    break;
-                case 12:
-                    uuid += '-';
-                    uuid += '4';
-                    break;
-                case 16:
-                    uuid += '-';
-                    uuid += (Math.random() * 4 | 8).toString(16);
-                    break;
-                default:
-                    uuid += (Math.random() * 16 | 0).toString(16);
-            }
-        }
-        return uuid;
-    };
 }
 
 const server = new SnapdropServer(process.env.PORT || 3030);
