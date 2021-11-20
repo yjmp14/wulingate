@@ -45,6 +45,11 @@
                 <use xlink:href="#icon-theme" />
             </svg>
         </a>
+        <a href="/en/" id="language" class="icon-button" title="Switch to English Site" >
+            <svg class="icon">
+                <use xlink:href="#icon-language" />
+            </svg>
+        </a>
         <a href="#" id="notification" class="icon-button" title="启用通知" hidden>
             <svg class="icon">
                 <use xlink:href="#notifications" />
@@ -60,8 +65,8 @@
     <x-peers class="center"></x-peers>
     <x-no-peers>
         <h2>在同网络其他设备上打开本网站以传送文件</h2>
-		<p style="color:#969696;">iOS 请使用 Safari 浏览器 / 其他系统建议使用 Chrome 浏览器</p>
-		<p style="color:#969696;">请勿使用代理 / VPN 等访问本网站</p>
+        <p style="color:#969696;">iOS 请使用 Safari 浏览器 / 其他系统建议使用 Chrome 浏览器</p>
+        <p style="color:#969696;">请勿使用代理 / VPN 等访问本网站</p>
     </x-no-peers>
     <x-instructions desktop="左键单击发送文件 / 右键单击发送消息" mobile="点按发送文件 / 长按发送消息"></x-instructions>
     <!-- Footer -->
@@ -140,7 +145,7 @@
             </svg>
             <h1>武林门</h1>
             <div class="font-subheading">跨平台传送文件的最便捷工具</div>
-			<div class="font-subheading">本网站系采用 Snapdrop 开源项目制作</div>
+            <div class="font-subheading">本网站系采用 Snapdrop 开源项目制作</div>
             <div class="row">
                 <a class="icon-button" target="_blank" href="https://github.com/RobinLinus/snapdrop" title="Snapdrop on Github" rel="noreferrer">
                     <svg class="icon">
@@ -176,7 +181,7 @@
         <symbol id=close viewBox="0 0 24 24">
             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
         </symbol>
-        <symbol id=help-outline viewBox="2 2 20 20" width="24" height="24">
+        <symbol id=help-outline viewBox="2 2 20 20">
             <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"></path>
         </symbol>
         <symbol id="github">
@@ -192,6 +197,9 @@
         </symbol>
         <symbol id="icon-theme" viewBox="0 0 24 24">
          <rect fill="none" height="24" width="24"/><path d="M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36c-0.98,1.37-2.58,2.26-4.4,2.26 c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/>
+        </symbol>
+        <symbol id="icon-language" viewBox="-2 -2 24 24">
+            <path d="M10,0 C4.5,0 0,4.5 0,10 C0,15.5 4.5,20 10,20 C15.5,20 20,15.5 20,10 C20,4.5 15.5,0 10,0 L10,0 Z M16.9,6 L14,6 C13.7,4.7 13.2,3.6 12.6,2.4 C14.4,3.1 16,4.3 16.9,6 L16.9,6 Z M10,2 C10.8,3.2 11.5,4.5 11.9,6 L8.1,6 C8.5,4.6 9.2,3.2 10,2 L10,2 Z M2.3,12 C2.1,11.4 2,10.7 2,10 C2,9.3 2.1,8.6 2.3,8 L5.7,8 C5.6,8.7 5.6,9.3 5.6,10 C5.6,10.7 5.7,11.3 5.7,12 L2.3,12 L2.3,12 Z M3.1,14 L6,14 C6.3,15.3 6.8,16.4 7.4,17.6 C5.6,16.9 4,15.7 3.1,14 L3.1,14 Z M6,6 L3.1,6 C4.1,4.3 5.6,3.1 7.4,2.4 C6.8,3.6 6.3,4.7 6,6 L6,6 Z M10,18 C9.2,16.8 8.5,15.5 8.1,14 L11.9,14 C11.5,15.4 10.8,16.8 10,18 L10,18 Z M12.3,12 L7.7,12 C7.6,11.3 7.5,10.7 7.5,10 C7.5,9.3 7.6,8.7 7.7,8 L12.4,8 C12.5,8.7 12.6,9.3 12.6,10 C12.6,10.7 12.4,11.3 12.3,12 L12.3,12 Z M12.6,17.6 C13.2,16.5 13.7,15.3 14,14 L16.9,14 C16,15.7 14.4,16.9 12.6,17.6 L12.6,17.6 Z M14.4,12 C14.5,11.3 14.5,10.7 14.5,10 C14.5,9.3 14.4,8.7 14.4,8 L17.8,8 C18,8.6 18.1,9.3 18.1,10 C18.1,10.7 18,11.4 17.8,12 L14.4,12 L14.4,12 Z"/>
         </symbol>
     </svg>
     <!-- Scripts -->
@@ -222,4 +230,6 @@
         }
         </style>
     </noscript>
+    <script>var _paq = window._paq = window._paq || []; _paq.push(['trackPageView']); _paq.push(['enableLinkTracking']); (function() {var u="https://analy.wulingate.com/"; _paq.push(['setTrackerUrl', u+'mtm.php']); _paq.push(['setSiteId', '1']); var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0]; g.async=true; g.src=u+'mtm.js'; s.parentNode.insertBefore(g,s);})();</script>
+    <noscript><p><img src="https://analy.wulingate.com/mtm.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
 </body>
