@@ -111,6 +111,8 @@ h3 {
     font-size: 16px;
     font-weight: 400;
     line-height: 24px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .font-body1,
