@@ -5,11 +5,22 @@ window.isDownloadSupported = (typeof document.createElement('a').download !== 'u
 window.isProductionEnvironment = !window.location.host.startsWith('localhost');
 window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-// set display name
+// set display name and room icon
 Events.on('display-name', e => {
     const me = e.detail.message;
-    const $displayName = $('displayName')
-    $displayName.textContent = 'You are known as ' + me.displayName;
+    const $displayName = $('displayName');
+    const $displayNote = $('displayNote');
+    if (sessionStorage.getItem("roomId")){
+        $displayName.textContent = 'You are: ' + me.displayName + ' @ Room: ' + me.room;
+        $displayNote.textContent = 'You can be discovered by everyone in this room';
+        $('room').querySelector('svg use').setAttribute('xlink:href', '#exit');
+        $('room').title = 'Exit The Room';
+    }else {
+        $displayName.textContent = 'Your device code is: ' + me.displayName;
+        $displayNote.textContent = 'You can be discovered by everyone on this network';
+        $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
+        $('room').title = 'Join or Create A Room';
+    }
     $displayName.title = me.deviceName;
 });
 
@@ -205,7 +216,6 @@ class PeerUI {
     }
 }
 
-
 class Dialog {
     constructor(id) {
         this.$el = $(id);
@@ -309,11 +319,46 @@ class ReceiveDialog extends Dialog {
     }
 }
 
+class JoinRoomDialog extends Dialog {
+    constructor() {
+        super('joinRoomDialog');
+        const roomIcon = document.getElementById('room');
+        roomIcon.addEventListener('click', e => this._joinExit(e));
+        this.$text = this.$el.querySelector('#roomInput');
+        const button = this.$el.querySelector('form');
+        button.addEventListener('submit', e => this._join(e));
+    }
+
+    _joinExit(e) {
+        e.preventDefault();
+        if (sessionStorage.getItem("roomId")) {
+            sessionStorage.removeItem("roomId");
+            location.reload();
+        }else {
+            this.show();
+        }
+    }
+
+    _join(e) {
+        e.preventDefault();
+        let inputNum = this.$text.value.replace(/\D/g,'');
+        if (inputNum.length >= 6) {
+            inputNum = inputNum.substring(0,6);
+            sessionStorage.setItem("roomId", inputNum);
+            location.reload();
+        }
+        else {
+            inputNum = new ServerConnection()._randomNum(6);
+            sessionStorage.setItem("roomId", inputNum);
+            location.reload();
+        }
+    }
+}
 
 class SendTextDialog extends Dialog {
     constructor() {
         super('sendTextDialog');
-        Events.on('text-recipient', e => this._onRecipient(e.detail))
+        Events.on('text-recipient', e => this._onRecipient(e.detail));
         this.$text = this.$el.querySelector('#textInput');
         const button = this.$el.querySelector('form');
         button.addEventListener('submit', e => this._send(e));
@@ -388,10 +433,9 @@ class Toast extends Dialog {
     _onNotfiy(message) {
         this.$el.textContent = message;
         this.show();
-        setTimeout(_ => this.hide(), 3000);
+        setTimeout(_ => this.hide(), 5000);
     }
 }
-
 
 class Notifications {
 
@@ -415,7 +459,7 @@ class Notifications {
                 Events.fire('notify-user', Notifications.PERMISSION_ERROR || 'Error');
                 return;
             }
-            this._notify('Even more snappy sharing!');
+            this._notify('Notifications enabled.');
             this.$button.setAttribute('hidden', 1);
         });
     }
@@ -480,7 +524,6 @@ class Notifications {
     }
 }
 
-
 class NetworkStatusUI {
 
     constructor() {
@@ -527,6 +570,7 @@ class Snapdrop {
             const receiveDialog = new ReceiveDialog();
             const sendTextDialog = new SendTextDialog();
             const receiveTextDialog = new ReceiveTextDialog();
+            const joinRoomDialog = new JoinRoomDialog();
             const toast = new Toast();
             const notifications = new Notifications();
             const networkStatusUI = new NetworkStatusUI();
@@ -536,8 +580,6 @@ class Snapdrop {
 }
 
 const snapdrop = new Snapdrop();
-
-
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js')
@@ -575,8 +617,8 @@ Events.on('load', () => {
         h = window.innerHeight;
         c.width = w;
         c.height = h;
-        let offset = h > 380 ? 100 : 65;
-        offset = h > 800 ? 116 : offset;
+        let offset = h > 420 ? 90 : 72;
+        offset = h > 800 ? 106 : offset;
         x0 = w / 2;
         y0 = h - offset;
         dw = Math.max(w, h, 1000) / 13;
