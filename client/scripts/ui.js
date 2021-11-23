@@ -26,7 +26,7 @@ Events.on('display-name', e => {
         $displayNote.textContent = 'You can be discovered by everyone on this network';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
         $('room').title = 'Join or Create A Room';
-        $$('x-no-peers h2').textContent = 'Open Wulingate on other devices to send files';
+        $$('x-no-peers h2').textContent = 'Open WulinGate on other devices to send files';
     }
     $displayName.title = me.deviceName;
 });
