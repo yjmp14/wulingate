@@ -573,7 +573,6 @@ class Events {
 RTCPeer.config = {
     'sdpSemantics': 'unified-plan',
     'iceServers': [
-    {urls: 'turn:oc.wulingate.com', username: 'hmzJ0OHZivkod703', credential: 'KDF04PBYD9xHAp0s' },
-    {urls: 'turn:km.wulingate.com', username: 'hmzJ0OHZivkod703', credential: 'KDF04PBYD9xHAp0s' }
+    urls: 'stun:stun.l.google.com:19302'
     ]
 }
