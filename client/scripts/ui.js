@@ -4,8 +4,13 @@ const isURL = text => /^((https?:\/\/|www)[^\s]+)/g.test(text.toLowerCase());
 window.isDownloadSupported = (typeof document.createElement('a').download !== 'undefined');
 window.isProductionEnvironment = !window.location.host.startsWith('localhost');
 window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+window.WeChat = /MicroMessenger|wxwork/.test(navigator.userAgent);
 
-// set display name and room icon
+// Browser compatibility alert. 
+if (window.WeChat){alert('WeChat Built-in browser doesn\'t support download, please tap ··· in the upper right corner and select Open in Browser.');}
+if (!window.isRtcSupported){alert('Current browser doesn\'t support this website\'s function, it\'s recommended to use Chrome, Edge, FireFox or Safari.');}
+
+// set display name, room icon and tip text. 
 Events.on('display-name', e => {
     const me = e.detail.message;
     const $displayName = $('displayName');
@@ -15,11 +20,13 @@ Events.on('display-name', e => {
         $displayNote.textContent = 'You can be discovered by everyone in this room';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#exit');
         $('room').title = 'Exit The Room';
+        $$('x-no-peers h2').textContent = 'Input room number on other devices to send files';
     }else {
         $displayName.textContent = 'Your device code is: ' + me.displayName;
         $displayNote.textContent = 'You can be discovered by everyone on this network';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
         $('room').title = 'Join or Create A Room';
+        $$('x-no-peers h2').textContent = 'Open Wulingate on other devices to send files';
     }
     $displayName.title = me.deviceName;
 });
