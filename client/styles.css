@@ -89,7 +89,6 @@ body {
 h1 {
     font-size: 34px;
     font-weight: 400;
-    letter-spacing: -.01em;
     line-height: 40px;
     margin: 8px 0 0;
 }
@@ -112,6 +111,9 @@ h3 {
     font-size: 16px;
     font-weight: 400;
     line-height: 24px;
+}
+
+x-dialog .font-subheading {
     padding-bottom: 5px;
 }
 
