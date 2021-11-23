@@ -13,7 +13,7 @@ class ServerConnection {
     _connect() {
         clearTimeout(this._reconnectTimer);
         if (this._isConnected() || this._isConnecting()) return;
-        const ws = new WebSocket(this._endpoint() + "?peerid=" + this._peerId());
+        const ws = new WebSocket(this._endpoint() + "?peerid=" + this._peerId() + "&code=" + this._peerCode()+ "&roomid=" + this._roomId());
         ws.binaryType = 'arraybuffer';
         ws.onopen = e => console.log('WS: server connected');
         ws.onmessage = e => this._onMessage(e.data);
@@ -55,7 +55,7 @@ class ServerConnection {
     }
 
     _peerId() {
-        let peerId = sessionStorage.getItem("peerid");
+        let peerId = sessionStorage.getItem("peerId");
         if (!peerId) {
             peerId = '';
             for (let ii = 0; ii < 32; ii += 1) {
@@ -77,9 +77,35 @@ class ServerConnection {
                         peerId += (Math.random() * 16 | 0).toString(16);
                 }
             }
-            sessionStorage.setItem("peerid", peerId);
+            sessionStorage.setItem("peerId", peerId);
         }
         return peerId;
+    }
+    
+    _randomNum(length = 1) {
+        let numStr = '';
+        for (let i = 0; i < length; i++) {
+            numStr += Math.floor(Math.random() * 10);
+        }
+        return numStr;
+    }
+    
+    _peerCode() {
+        let peerCode = sessionStorage.getItem("peerCode");
+        if (!peerCode) {
+            peerCode = this._randomNum(4);
+            sessionStorage.setItem("peerCode", peerCode);
+        }
+        return peerCode;
+    }
+    
+    _roomId() {
+        let roomId = sessionStorage.getItem("roomId");
+        //if (!roomId) {
+        //    roomId = this._randomNum(6);
+        //    sessionStorage.setItem("roomId", roomId);
+        //}
+        return roomId;
     }
 
     _endpoint() {

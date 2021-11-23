@@ -78,7 +78,6 @@ header {
     display: none !important;
 }
 
-
 /* Typography */
 
 body {
@@ -105,14 +104,15 @@ h2 {
 h3 {
     font-size: 20px;
     font-weight: 500;
-    margin: 16px 0;
+    margin: 10px 0;
+    color: var(--primary-color);
 }
 
 .font-subheading {
     font-size: 16px;
     font-weight: 400;
     line-height: 24px;
-    word-break: break-all;
+    padding-bottom: 5px;
 }
 
 .font-body1,
@@ -133,8 +133,6 @@ a {
     cursor: pointer;
 }
 
-
-
 /* Icons */
 
 .icon {
@@ -142,8 +140,6 @@ a {
     height: var(--icon-size);
     fill: currentColor;
 }
-
-
 
 /* Shadows */
 
@@ -158,9 +154,6 @@ a {
         0 1px 10px 0 rgba(0, 0, 0, 0.12),
         0 2px 4px -1px rgba(0, 0, 0, 0.4);
 }
-
-
-
 
 /* Animations */
 
@@ -204,8 +197,6 @@ x-no-peers a {
 x-peers:not(:empty)+x-no-peers {
     display: none;
 }
-
-
 
 /* Peer */
 
@@ -298,8 +289,6 @@ x-peer[drop] x-icon {
     transform: scale(1.1);
 }
 
-
-
 /* Footer */
 
 footer {
@@ -314,7 +303,6 @@ footer {
 
 footer .logo {
     --icon-size: 80px;
-    margin-bottom: 8px;
     color: var(--primary-color);
 }
 
@@ -327,7 +315,6 @@ footer .font-body2 {
         margin-bottom: 16px;
     }
 }
-
 
 /* Dialog */
 
@@ -372,10 +359,29 @@ x-dialog a {
     color: var(--primary-color);
 }
 
+/* JoinRoom Dialog */
+
+#roomInput {
+    width: 100%;
+    text-align: center;
+    font-size: 30px;
+    letter-spacing: 5px;
+    padding: 4px 24px 4px 29px;
+}
+
 /* Receive Dialog */
+
 #receiveDialog .row {
     margin-top: 24px;
     margin-bottom: 8px;
+}
+
+#fileName{
+    word-break: break-all;
+}
+
+#fileSize{
+    padding-bottom: 5px;
 }
 
 /* Receive Text Dialog */
@@ -464,12 +470,9 @@ x-dialog a {
     opacity: 0.2;
 }
 
-
-
 button::-moz-focus-inner {
     border: 0;
 }
-
 
 /* Icon Button */
 
@@ -481,8 +484,6 @@ button::-moz-focus-inner {
 .icon-button:before {
     border-radius: 50%;
 }
-
-
 
 /* Text Input */
 
@@ -503,7 +504,6 @@ button::-moz-focus-inner {
     line-height: 16px;
     max-height: 300px;
 }
-
 
 /* Info Animation */
 
@@ -559,7 +559,6 @@ button::-moz-focus-inner {
     margin: 8px 8px -16px;
 }
 
-
 /* Loading Indicator */
 
 .progress {
@@ -590,7 +589,6 @@ button::-moz-focus-inner {
 .over50 .circle.right {
     transform: rotate(180deg);
 }
-
 
 /* Generic placeholder */
 [placeholder]:empty:before {
@@ -629,7 +627,6 @@ x-toast:not([show]):not(:hover) {
     transform: translateY(100px);
 }
 
-
 /* Instructions */
 
 x-instructions {
@@ -648,7 +645,6 @@ x-instructions:before {
 x-peers:empty~x-instructions {
     opacity: 0;
 }
-
 
 /* Responsive Styles */
 
@@ -680,7 +676,6 @@ screen and (min-width: 1100px) {
 */
 @supports (-webkit-overflow-scrolling: touch) {
 
-    
     html {
         position: fixed;
     }
@@ -731,7 +726,6 @@ x-dialog x-paper {
     display: block;
 }
 
-
 /* Styles for users who prefer dark mode at the OS level */
 @media (prefers-color-scheme: dark) {
 
@@ -761,4 +755,3 @@ x-dialog x-paper {
         overflow: hidden;
     }
 }
-
