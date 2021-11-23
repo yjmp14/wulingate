@@ -35,7 +35,8 @@ class SnapdropServer {
             type: 'display-name',
             message: {
                 displayName: peer.name.displayName,
-                deviceName: peer.name.deviceName
+                deviceName: peer.name.deviceName,
+                room: peer.room
             }
         });
     }
@@ -155,12 +156,12 @@ class Peer {
         // set socket
         this.socket = socket;
 
+        // set peer id, code, room
+        this._setPeerValues(request);
 
         // set remote ip
         this._setIP(request);
 
-        // set peer id
-        this._setPeerId(request)
         // is WebRTC supported ?
         this.rtcSupported = request.url.indexOf('webrtc') > -1;
         // set name 
@@ -170,20 +171,30 @@ class Peer {
         this.lastBeat = Date.now();
     }
 
+    _setPeerValues(request) {
+        let params = (new URL(request.url, "http://server")).searchParams;
+        this.id = params.get("peerid");
+        this.code = params.get("code");
+        let incomeRoomId = params.get("roomid").replace(/\D/g,'');
+        if (incomeRoomId.length == 6) {
+            this.room = incomeRoomId;
+        }else {
+            this.room = '';
+        }
+    }
+
     _setIP(request) {
-        if (request.headers['x-forwarded-for']) {
+        if (this.room){
+            this.ip = this.room;
+        }else if (request.headers['x-forwarded-for']) {
             this.ip = request.headers['x-forwarded-for'].split(/\s*,\s*/)[0];
-        } else {
+        }else {
             this.ip = request.connection.remoteAddress;
         }
         // IPv4 and IPv6 use different values to refer to localhost
         if (this.ip == '::1' || this.ip == '::ffff:127.0.0.1') {
             this.ip = '127.0.0.1';
         }
-    }
-
-    _setPeerId(request) {
-        this.id = new URL(request.url, "http://server").searchParams.get("peerid");
     }
 
     toString() {
@@ -209,12 +220,7 @@ class Peer {
         if(!deviceName)
             deviceName = 'Unknown';
 
-        var randomNum = '';
-        for (var i = 0; i < 4; i++) {
-            randomNum += Math.floor(Math.random() * 10);
-        }
-
-        const displayName = randomNum;
+        let displayName = this.code;
 
         this.name = {
             model: ua.device.model,
@@ -230,6 +236,7 @@ class Peer {
         return {
             id: this.id,
             name: this.name,
+            room: this.room,
             rtcSupported: this.rtcSupported
         }
     }

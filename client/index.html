@@ -45,7 +45,12 @@
                 <use xlink:href="#icon-theme" />
             </svg>
         </a>
-        <a href="/en/" id="language" class="icon-button" title="Switch to English Site" >
+        <a href="#" id="room" class="icon-button" >
+            <svg class="icon">
+                <use xlink:href="#enter" />
+            </svg>
+        </a>
+        <a href="https://www.wulingate.com/" id="language" class="icon-button" title="Switch to Chinese Site" >
             <svg class="icon">
                 <use xlink:href="#icon-language" />
             </svg>
@@ -74,9 +79,25 @@
         <svg class="icon logo">
             <use xlink:href="#wifi-tethering" />
         </svg>
-        <div id="displayName" placeholder="跨平台传送文件的最便捷工具"></div>
-        <div class="font-body2">可被局域网内所有人发现</div>
+        <div id="displayName" placeholder="&nbsp;"></div>
+        <div id="displayNote" class="font-body2" placeholder="&nbsp;"></div>
     </footer>
+    <!-- JoinRoom Dialog -->
+    <x-dialog id="joinRoomDialog">
+        <form action="#">
+            <x-background class="full center">
+                <x-paper shadow="2">
+                    <h3>房间号（6位数字）</h3>
+                    <div class="font-subheading">注：新建房间无需输入</div>
+                    <input type="tel" id="roomInput" class="textarea" autocomplete="off" maxlength="6" oninput="value=value.replace(/\D/g,'');let btn=$('joinRoomDialog').querySelector('button');if(value.length==6){btn.textContent='Join';}else{btn.textContent='Create';}" autofocus contenteditable>
+                    <div class="row-reverse">
+                        <button class="button" type="submit" close>新建</button>
+                        <a class="button" close>取消</a>
+                    </div>
+                </x-paper>
+            </x-background>
+        </form>
+    </x-dialog>
     <!-- Receive Dialog -->
     <x-dialog id="receiveDialog">
         <x-background class="full center">
@@ -200,6 +221,12 @@
         </symbol>
         <symbol id="icon-language" viewBox="-2 -2 24 24">
             <path d="M10,0 C4.5,0 0,4.5 0,10 C0,15.5 4.5,20 10,20 C15.5,20 20,15.5 20,10 C20,4.5 15.5,0 10,0 L10,0 Z M16.9,6 L14,6 C13.7,4.7 13.2,3.6 12.6,2.4 C14.4,3.1 16,4.3 16.9,6 L16.9,6 Z M10,2 C10.8,3.2 11.5,4.5 11.9,6 L8.1,6 C8.5,4.6 9.2,3.2 10,2 L10,2 Z M2.3,12 C2.1,11.4 2,10.7 2,10 C2,9.3 2.1,8.6 2.3,8 L5.7,8 C5.6,8.7 5.6,9.3 5.6,10 C5.6,10.7 5.7,11.3 5.7,12 L2.3,12 L2.3,12 Z M3.1,14 L6,14 C6.3,15.3 6.8,16.4 7.4,17.6 C5.6,16.9 4,15.7 3.1,14 L3.1,14 Z M6,6 L3.1,6 C4.1,4.3 5.6,3.1 7.4,2.4 C6.8,3.6 6.3,4.7 6,6 L6,6 Z M10,18 C9.2,16.8 8.5,15.5 8.1,14 L11.9,14 C11.5,15.4 10.8,16.8 10,18 L10,18 Z M12.3,12 L7.7,12 C7.6,11.3 7.5,10.7 7.5,10 C7.5,9.3 7.6,8.7 7.7,8 L12.4,8 C12.5,8.7 12.6,9.3 12.6,10 C12.6,10.7 12.4,11.3 12.3,12 L12.3,12 Z M12.6,17.6 C13.2,16.5 13.7,15.3 14,14 L16.9,14 C16,15.7 14.4,16.9 12.6,17.6 L12.6,17.6 Z M14.4,12 C14.5,11.3 14.5,10.7 14.5,10 C14.5,9.3 14.4,8.7 14.4,8 L17.8,8 C18,8.6 18.1,9.3 18.1,10 C18.1,10.7 18,11.4 17.8,12 L14.4,12 L14.4,12 Z"/>
+        </symbol>
+        <symbol id="enter" viewBox="-170 -150 1229 1229">
+            <path d="M640 576L640 448 896 448 896 320 640 320 640 192 448 336 448 192 192 64 704 64 704 256 768 256 768 0 64 0 64 832 448 1024 448 832 768 832 768 512 704 512 704 768 448 768 448 432z"/>
+        </symbol>
+        <symbol id="exit" viewBox="-170 -150 1229 1229">
+            <path d="M640 768H384V192L128 64h512v192h64V0H0v832l384 192V832h320V512h-64V768zM1024 384L768 192v128H512v128h256v128L1024 384z"/>
         </symbol>
     </svg>
     <!-- Scripts -->
