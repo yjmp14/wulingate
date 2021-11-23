@@ -11,6 +11,7 @@
     <meta name="color-scheme" content="dark light">
     <meta name="apple-mobile-web-app-capable" content="no">
     <meta name="apple-mobile-web-app-title" content="Snapdrop">
+	<meta name="application-name" content="Snapdrop">
     <!-- Descriptions -->
     <meta name="description" content="Instantly share images, videos, PDFs, and links with people nearby. Peer2Peer and Open Source. No Setup, No Signup.">
     <meta name="keywords" content="File, Transfer, Share, Peer2Peer">
@@ -72,7 +73,8 @@
     <!-- Peers -->
     <x-peers class="center"></x-peers>
     <x-no-peers>
-        <h2>Open Snapdrop on other devices to send files</h2>
+        <h2 placeholder="&nbsp;"></h2>
+        <p style="color:#969696;">Do not use proxy or VPN to access this website</p>
     </x-no-peers>
     <x-instructions desktop="Click to send files or right click to send a message" mobile="Tap to send files or long tap to send a message"></x-instructions>
     <!-- Footer -->
@@ -89,7 +91,7 @@
             <x-background class="full center">
                 <x-paper shadow="2">
                     <h3>Room Number (6 Digits)</h3>
-                    <div class="font-subheading">Note: To create a new room, No need to input.</div>
+                    <div class="font-subheading">Note: No need to input to create a room.</div>
                     <input type="tel" id="roomInput" class="textarea" autocomplete="off" maxlength="6" oninput="value=value.replace(/\D/g,'');let btn=$('joinRoomDialog').querySelector('button');if(value.length==6){btn.textContent='Join';}else{btn.textContent='Create';}" autofocus contenteditable>
                     <div class="row-reverse">
                         <button class="button" type="submit" close>Create</button>
