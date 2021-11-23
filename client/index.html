@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -69,8 +70,7 @@
     <!-- Peers -->
     <x-peers class="center"></x-peers>
     <x-no-peers>
-        <h2>在同网络其他设备上打开本网站以传送文件</h2>
-        <p style="color:#969696;">iOS 请使用 Safari 浏览器 / 其他系统建议使用 Chrome 浏览器</p>
+        <h2 placeholder="&nbsp;"></h2>
         <p style="color:#969696;">请勿使用代理 / VPN 等访问本网站</p>
     </x-no-peers>
     <x-instructions desktop="左键单击发送文件 / 右键单击发送消息" mobile="点按发送文件 / 长按发送消息"></x-instructions>
@@ -88,8 +88,8 @@
             <x-background class="full center">
                 <x-paper shadow="2">
                     <h3>房间号（6位数字）</h3>
-                    <div class="font-subheading">注：新建房间无需输入</div>
-                    <input type="tel" id="roomInput" class="textarea" autocomplete="off" maxlength="6" oninput="value=value.replace(/\D/g,'');let btn=$('joinRoomDialog').querySelector('button');if(value.length==6){btn.textContent='Join';}else{btn.textContent='Create';}" autofocus contenteditable>
+                    <div class="font-subheading">注：新建房间无需输入。</div>
+                    <input type="tel" id="roomInput" class="textarea" autocomplete="off" maxlength="6" oninput="value=value.replace(/\D/g,'');let btn=$('joinRoomDialog').querySelector('button');if(value.length==6){btn.textContent='加入';}else{btn.textContent='新建';}" autofocus contenteditable>
                     <div class="row-reverse">
                         <button class="button" type="submit" close>新建</button>
                         <a class="button" close>取消</a>

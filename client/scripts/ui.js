@@ -4,8 +4,13 @@ const isURL = text => /^((https?:\/\/|www)[^\s]+)/g.test(text.toLowerCase());
 window.isDownloadSupported = (typeof document.createElement('a').download !== 'undefined');
 window.isProductionEnvironment = !window.location.host.startsWith('localhost');
 window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+window.WeChat = /MicroMessenger|wxwork/.test(navigator.userAgent);
 
-// set display name and room icon
+// Browser compatibility alert. 
+if (window.WeChat){alert('微信内置浏览器不支持下载，请点右上角 ··· 在浏览器打开。');}
+if (!window.isRtcSupported){alert('当前浏览器不支持本网站功能，推荐使用 Chrome、Edge、FireFox、Safari。');}
+
+// set display name, room icon and tip text. 
 Events.on('display-name', e => {
     const me = e.detail.message;
     const $displayName = $('displayName');
@@ -15,11 +20,13 @@ Events.on('display-name', e => {
         $displayNote.textContent = '可被同房间内所有人发现';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#exit');
         $('room').title = '退出该房间';
+        $$('x-no-peers h2').textContent = '在其他设备上输入房间号以传送文件';
     }else {
         $displayName.textContent = '本设备代码为: ' + me.displayName;
         $displayNote.textContent = '可被局域网内所有人发现';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
         $('room').title = '加入或新建一个房间';
+        $$('x-no-peers h2').textContent = '在其他设备上打开本网站以传送文件';
     }
     $displayName.title = me.deviceName;
 });
