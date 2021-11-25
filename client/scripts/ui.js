@@ -25,7 +25,7 @@ Events.on('display-name', e => {
         $displayName.textContent = 'Your device code is: ' + me.displayName;
         $displayNote.textContent = 'You can be discovered by everyone on this network';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
-        $('room').title = 'Join or Create A Room';
+        $('room').title = 'Join or Create a Room';
         $$('x-no-peers h2').textContent = 'Open WulinGate on other devices to send files';
     }
     $displayName.title = me.deviceName;
@@ -42,7 +42,7 @@ class PeersUI {
     }
 
     _onPeerJoined(peer) {
-        if ($(peer.id)) return; // peer already exists
+        if ($(peer.id) || (peer.id == sessionStorage.getItem("peerId"))) return; // peer already exists. prevent to show itself.
         const peerUI = new PeerUI(peer);
         $$('x-peers').appendChild(peerUI.$el);
         setTimeout(e => window.animateBackground(false), 1750); // Stop animation
