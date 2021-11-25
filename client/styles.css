@@ -354,7 +354,7 @@ x-dialog:not([show]) x-background {
 }
 
 x-dialog .row-reverse>.button {
-    margin-top: 16px;
+    margin-top: 10px;
     margin-left: 8px;
 }
 
@@ -496,7 +496,7 @@ button::-moz-focus-inner {
     outline: none;
     padding: 16px 24px;
     border-radius: 16px;
-    margin: 8px 0;
+    margin: 10px 0;
     font-size: 14px;
     font-family: inherit;
     background: #f1f3f4;
