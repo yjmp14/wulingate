@@ -42,7 +42,7 @@ class PeersUI {
     }
 
     _onPeerJoined(peer) {
-        if ($(peer.id)) return; // peer already exists
+        if ($(peer.id) || (peer.id == sessionStorage.getItem("peerId"))) return; // peer already exists. prevent to show itself.
         const peerUI = new PeerUI(peer);
         $$('x-peers').appendChild(peerUI.$el);
         setTimeout(e => window.animateBackground(false), 1750); // Stop animation
