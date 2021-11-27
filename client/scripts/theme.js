@@ -18,7 +18,8 @@
   }
    
   // Listen for a click on the button 
-  btnTheme.addEventListener('click', function() {
+  btnTheme.addEventListener('click', function(e) {
+    e.preventDefault();
     // If the user's OS setting is dark and matches our .dark-theme class...
     if (prefersDarkScheme.matches) {
       // ...then toggle the light mode class
