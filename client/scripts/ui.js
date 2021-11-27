@@ -454,13 +454,14 @@ class Notifications {
         if (Notification.permission !== 'granted') {
             this.$button = $('notification');
             this.$button.removeAttribute('hidden');
-            this.$button.addEventListener('click', e => this._requestPermission());
+            this.$button.addEventListener('click', e => this._requestPermission(e));
         }
         Events.on('text-received', e => this._messageNotification(e.detail.text));
         Events.on('file-received', e => this._downloadNotification(e.detail.name));
     }
 
-    _requestPermission() {
+    _requestPermission(e) {
+        e.preventDefault();
         Notification.requestPermission(permission => {
             if (permission !== 'granted') {
                 Events.fire('notify-user', Notifications.PERMISSION_ERROR || 'Error');
