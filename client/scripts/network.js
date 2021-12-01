@@ -568,7 +568,6 @@ class Events {
     }
 }
 
-
 RTCPeer.config = {
     'sdpSemantics': 'unified-plan',
     'iceServers': [
