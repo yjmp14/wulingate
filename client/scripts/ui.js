@@ -382,7 +382,7 @@ class ReceivedMsgsDialog extends Dialog {
     async _onCopy(e){
         e.preventDefault();
         await navigator.clipboard.writeText(e.target.closest('.MsgItem').querySelector('.MsgContent').textContent);
-        Events.fire('notify-user', 'Copied to clipboard');
+        Events.fire('notify-user', '已复制到剪切板');
     }
 
     html() {
