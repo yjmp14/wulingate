@@ -9,6 +9,8 @@ window.WeChat = /MicroMessenger|wxwork/.test(navigator.userAgent);
 // Browser compatibility alert. 
 if (window.WeChat){alert('WeChat Built-in browser doesn\'t support download, please tap ··· in the upper right corner and select Open in Browser.');}
 if (!window.isRtcSupported){alert('Current browser doesn\'t support this website\'s function, it\'s recommended to use Chrome, Edge, FireFox or Safari.');}
+// If user language is Chinese, show language switch button.
+if (navigator.language.substr(0,2) == 'zh'){$('language').style.display = "flex";}
 
 // set display name, room icon and tip text. 
 Events.on('display-name', e => {
@@ -21,7 +23,7 @@ Events.on('display-name', e => {
         $('room').querySelector('svg use').setAttribute('xlink:href', '#exit');
         $('room').title = 'Exit The Room';
         $$('x-no-peers h2').textContent = 'Input room number on other devices to send files';
-    }else {
+    } else {
         $displayName.textContent = 'Your device code is: ' + me.displayName;
         $displayNote.textContent = 'You can be discovered by everyone on this network';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
@@ -92,7 +94,7 @@ class PeerUI {
 
     html() {
         return `
-            <label class="column center" title="Click to send files or right click to send a text">
+            <label class="column center" title="Click to send files or right click to send a message">
                 <input type="file" multiple>
                 <x-icon shadow="1">
                     <svg class="icon"><use xlink:href="#"/></svg>
@@ -320,7 +322,6 @@ class ReceiveDialog extends Dialog {
         this._dequeueFile();
     }
 
-
     _autoDownload(){
         return !this.$el.querySelector('#autoDownload').checked
     }
@@ -329,8 +330,7 @@ class ReceiveDialog extends Dialog {
 class JoinRoomDialog extends Dialog {
     constructor() {
         super('joinRoomDialog');
-        const roomIcon = document.getElementById('room');
-        roomIcon.addEventListener('click', e => this._joinExit(e));
+        $('room').addEventListener('click', e => this._joinExit(e));
         this.$text = this.$el.querySelector('#roomInput');
         const button = this.$el.querySelector('form');
         button.addEventListener('submit', e => this._join(e));
@@ -358,6 +358,62 @@ class JoinRoomDialog extends Dialog {
             inputNum = new ServerConnection()._randomNum(6);
             sessionStorage.setItem("roomId", inputNum);
             location.reload();
+        }
+    }
+}
+
+class ReceivedMsgsDialog extends Dialog {
+    constructor() {
+        super('receivedMsgsDialog');
+        $('messages').addEventListener('click', e => this._showMsgs(e));
+        if (!$$('.MsgItem') && sessionStorage.getItem("messages")) {
+            let msgs = JSON.parse(sessionStorage.getItem("messages"));
+            for (let i=msgs.length-1; i >= 0; i--) {
+                this._updateMsgsBox(msgs[i]);
+            }
+        }
+    }
+
+    _showMsgs(e){
+        e.preventDefault();
+        this.show();
+    }
+
+    async _onCopy(e){
+        e.preventDefault();
+        await navigator.clipboard.writeText(e.target.closest('.MsgItem').querySelector('.MsgContent').textContent);
+        Events.fire('notify-user', 'Copied to clipboard');
+    }
+
+    html() {
+        return `
+            <div class="MsgTextBox">
+                <div class="MsgContent"></div>
+            </div>
+            <a herf="#" class="copy center" title="Copy to clipboard">
+                <svg>
+                    <use xlink:href="#icon-copy" />
+                </svg>
+            </a>`
+    }
+
+    _initMsgItem() {
+        const item = document.createElement('div');
+        item.className = 'MsgItem';
+        item.innerHTML = this.html();
+        this.$item = item;
+    }
+    
+    _updateMsgsBox(content) {
+        this._initMsgItem();
+        this.$item.querySelector(".MsgContent").textContent = content;
+        $('MsgsBox').prepend(this.$item);
+        let msgsItem = $('MsgsBox').querySelectorAll('.MsgItem');
+        if (msgsItem[20]) {$('MsgsBox').removeChild(msgsItem[20]);}
+        $('messages').style.display = 'flex';
+        let copyBtn = $('MsgsBox').querySelectorAll('.copy');
+        for (let i=0; i < copyBtn.length; i++) {
+            copyBtn[i].addEventListener("click", e => this._onCopy(e));
         }
     }
 }
@@ -397,6 +453,7 @@ class SendTextDialog extends Dialog {
             to: this._recipient,
             text: this.$text.innerText
         });
+        this.$text.innerText = "";
     }
 }
 
@@ -423,6 +480,19 @@ class ReceiveTextDialog extends Dialog {
         }
         this.show();
         window.blop.play();
+        let msgs = new Array();
+        let receivedMsgsDialog = new ReceivedMsgsDialog();
+        if (sessionStorage.getItem("messages")){
+            msgs = JSON.parse(sessionStorage.getItem("messages"));
+            msgs.unshift(text);
+            if (msgs[20]) { msgs.splice(20);}
+            sessionStorage.setItem("messages", JSON.stringify(msgs));
+            receivedMsgsDialog._updateMsgsBox(text);
+        } else {
+            msgs[0] = text;
+            sessionStorage.setItem("messages", JSON.stringify(msgs));
+            receivedMsgsDialog._updateMsgsBox(text);
+        }
     }
 
     async _onCopy() {
@@ -440,7 +510,7 @@ class Toast extends Dialog {
     _onNotfiy(message) {
         this.$el.textContent = message;
         this.show();
-        setTimeout(_ => this.hide(), 5000);
+        setTimeout(_ => this.hide(), 3000);
     }
 }
 
@@ -579,6 +649,7 @@ class Snapdrop {
             const sendTextDialog = new SendTextDialog();
             const receiveTextDialog = new ReceiveTextDialog();
             const joinRoomDialog = new JoinRoomDialog();
+            const receivedMsgsDialog = new ReceivedMsgsDialog();
             const toast = new Toast();
             const notifications = new Notifications();
             const networkStatusUI = new NetworkStatusUI();

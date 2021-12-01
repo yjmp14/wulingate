@@ -179,6 +179,7 @@ x-peers {
     overflow: hidden;
     flex-flow: row wrap;
     z-index: 2;
+    transition: color 300ms;
 }
 
 /* Empty Peers List */
@@ -302,6 +303,7 @@ footer {
     align-items: center;
     padding: 0 0 16px 0;
     text-align: center;
+    transition: color 300ms;
 }
 
 footer .logo {
@@ -370,6 +372,83 @@ x-dialog a {
     font-size: 30px;
     letter-spacing: 5px;
     padding: 4px 24px 4px 29px;
+}
+
+/* ReceivedMsgsDialog Dialog */
+
+#receivedMsgsDialog a.icon-button {
+    width: 40px;
+    height: 30px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: #888;
+    transition: color 300ms;
+}
+
+#receivedMsgsDialog a.icon-button:hover {
+    color: #fafafa;
+}
+
+#receivedMsgsDialog a.icon-button:before {
+    border-radius: 6px;
+    background: #c42b1c;
+}
+
+#receivedMsgsDialog a.icon-button:hover:before {
+    opacity: 1;
+}
+
+#receivedMsgsDialog a.icon-button>svg.icon {
+    width: 18px;
+    height: 18px;
+    z-index: 1;
+}
+
+#MsgsBox {
+    height:318px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* firefox scrollbar style */
+    scrollbar-width: thin;
+}
+
+.MsgItem {
+    margin: 8px 0;
+    position: relative;
+    padding: 3px 25px 3px 7px;
+    border: 1px solid #888;
+    border-radius: 5px;
+}
+
+.MsgTextBox {
+    height: 60px;
+    word-break: break-all;
+    overflow: hidden;
+}
+
+.MsgItem a.copy {
+    height: 100%; 
+    width: 24px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    fill: currentColor;
+    color: #888;
+    background: rgba(150, 150, 150, 0.15);
+    border-radius: 0 5px 5px 0;
+    transition: color 150ms;
+    transition: background 150ms;
+}
+
+.MsgItem a.copy:hover{
+    color: var(--primary-color);
+    background: rgba(66, 133, 244, 0.25);
+}
+
+.copy>svg {
+    width: 20px;
+    height: 20px;
 }
 
 /* Receive Dialog */
@@ -757,4 +836,16 @@ x-dialog x-paper {
     body {
         overflow: hidden;
     }
+}
+
+/* webkit scrollbar style*/
+
+::-webkit-scrollbar{
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-thumb{
+    background: #bfbfbf;
+    border-radius: 4px;
 }
