@@ -9,8 +9,13 @@ window.WeChat = /MicroMessenger|wxwork/.test(navigator.userAgent);
 // Browser compatibility alert. 
 if (window.WeChat){alert('微信内置浏览器不支持下载，请点右上角 ··· 在浏览器打开。');}
 if (!window.isRtcSupported){alert('当前浏览器不支持本网站功能，推荐使用 Chrome、Edge、FireFox、Safari。');}
-// If user language is not Chinese, show language switch button.
-if (navigator.language.substr(0,2) != 'zh'){$('language').style.display = "flex";}
+// If user language is not Chinese, show language switch button. Auto switch to English site.
+if (navigator.language.substr(0,2) != 'zh'){
+    $('language').style.display = "flex";
+    if (document.referrer != 'https://www.wulingate.com/en/'){
+        window.location.href='https://www.wulingate.com/en/';
+    }
+}
 
 // set display name, room icon and tip text. 
 Events.on('display-name', e => {
