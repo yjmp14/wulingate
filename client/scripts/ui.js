@@ -574,8 +574,8 @@ class Notifications {
             const notification = this._notify(message, '点击打开链接');
             this._bind(notification, e => window.open(message, '_blank', null, true));
         } else {
-            const notification = this._notify(message, '点击复制文本');
-            this._bind(notification, e => this._copyText(message, notification));
+            const notification = this._notify(message, '收到新消息（点击复制文本）');
+            this._bind(notification, e => this._copyText(message, notification)); //Only work with blink core desktop browsers, like Chrome, Edge. 
         }
     }
 
@@ -592,8 +592,7 @@ class Notifications {
 
     _copyText(message, notification) {
         notification.close();
-        if (!navigator.clipboard.writeText(message)) return;
-        this._notify('已复制到剪切板');
+        newClipboard.writeText(message) ? this._notify('已复制到剪切板') : this._notify('复制失败，请返回网页复制。');
     }
 
     _bind(notification, handler) {
