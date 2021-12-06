@@ -1,38 +1,38 @@
 // Polyfill for Navigator.clipboard.writeText
-if (!navigator.clipboard) {
-    navigator.clipboard = {
-        writeText: text => {
+if (!navigator.clipboard) { navigator.clipboard = newClipboard; }
 
-            // A <span> contains the text to copy
-            const span = document.createElement('span');
-            span.textContent = text;
-            span.style.whiteSpace = 'pre'; // Preserve consecutive spaces and newlines
+newClipboard = {
+    writeText: text => {
 
-            // Paint the span outside the viewport
-            span.style.position = 'absolute';
-            span.style.left = '-9999px';
-            span.style.top = '-9999px';
+        // A <span> contains the text to copy
+        const span = document.createElement('span');
+        span.textContent = text;
+        span.style.whiteSpace = 'pre'; // Preserve consecutive spaces and newlines
 
-            const win = window;
-            const selection = win.getSelection();
-            win.document.body.appendChild(span);
+        // Paint the span outside the viewport
+        span.style.position = 'absolute';
+        span.style.left = '-9999px';
+        span.style.top = '-9999px';
 
-            const range = win.document.createRange();
-            selection.removeAllRanges();
-            range.selectNode(span);
-            selection.addRange(range);
+        const win = window;
+        const selection = win.getSelection();
+        win.document.body.appendChild(span);
 
-            let success = false;
-            try {
-                success = win.document.execCommand('copy');
-            } catch (err) {
-                return Promise.error();
-            }
+        const range = win.document.createRange();
+        selection.removeAllRanges();
+        range.selectNode(span);
+        selection.addRange(range);
 
-            selection.removeAllRanges();
-            span.remove();
-
-            return Promise.resolve();
+        let success = false;
+        try {
+            success = win.document.execCommand('copy');
+        } catch (err) {
+            return Promise.error();
         }
+
+        selection.removeAllRanges();
+        span.remove();
+
+		return success ? Promise.resolve() : false;
     }
 }
