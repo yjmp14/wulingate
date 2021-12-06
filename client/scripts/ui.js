@@ -569,8 +569,8 @@ class Notifications {
             const notification = this._notify(message, 'Click to open link');
             this._bind(notification, e => window.open(message, '_blank', null, true));
         } else {
-            const notification = this._notify(message, 'Click to copy text');
-            this._bind(notification, e => this._copyText(message, notification));
+            const notification = this._notify(message, 'New message (Click to copy text)');
+            this._bind(notification, e => this._copyText(message, notification)); //Only work with blink core desktop browsers, like Chrome, Edge. 
         }
     }
 
@@ -587,8 +587,7 @@ class Notifications {
 
     _copyText(message, notification) {
         notification.close();
-        if (!navigator.clipboard.writeText(message)) return;
-        this._notify('Copied text to clipboard');
+        newClipboard.writeText(message) ? this._notify('Copied text to clipboard') : this._notify('Copy failed, please return web page to copy.');
     }
 
     _bind(notification, handler) {
