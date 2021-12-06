@@ -241,7 +241,7 @@ class Peer {
     }
 
     _onChunkReceived(chunk) {
-        if(!chunk.byteLength) return;
+        if(!(chunk.byteLength || chunk.size)) return;
         
         this._digester.unchunk(chunk);
         const progress = this._digester.progress;
