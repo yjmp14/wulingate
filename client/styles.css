@@ -264,6 +264,7 @@ x-peer[transfer] x-icon {
 
 .device-name {
     font-size: 14px;
+    white-space: nowrap;
 }
 
 x-peer[transfer] .status:before {
