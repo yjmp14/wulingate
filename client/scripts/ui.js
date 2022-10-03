@@ -20,6 +20,7 @@ Events.on('display-name', e => {
         $displayNote.textContent = 'You can be discovered by everyone in this room';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#exit');
         $('room').title = 'Exit The Room';
+        $('share-room-url').removeAttribute('hidden');
         $$('x-no-peers h2').textContent = 'Input room number on other devices to send files';
     } else {
         $displayName.textContent = 'Your device code is: ' + me.displayName;
@@ -332,6 +333,16 @@ class JoinRoomDialog extends Dialog {
         this.$text = this.$el.querySelector('#roomInput');
         const button = this.$el.querySelector('form');
         button.addEventListener('submit', e => this._join(e));
+        $('share-room-url').addEventListener('click', () => this._shareRoomViaURL());
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('room_id')) {
+            let inputNum = urlParams.get('room_id');
+            if (inputNum.length === 6 && !isNaN(inputNum)) {
+                sessionStorage.setItem("roomId", inputNum);
+                location.replace(location.origin); //remove room_id from url
+            }
+        }
     }
 
     _joinExit(e) {
@@ -357,6 +368,20 @@ class JoinRoomDialog extends Dialog {
             sessionStorage.setItem("roomId", inputNum);
             location.reload();
         }
+    }
+
+    _shareRoomViaURL() {
+        let url = new URL(location.href)
+        url.searchParams.append('room_id', sessionStorage.getItem("roomId"))
+        console.debug(url);
+        navigator.clipboard.writeText(url.href).then(
+            () => {
+                Events.fire('notify-user', 'URL copied to clipboard');
+            },
+            () => {
+                Events.fire('notify-user', 'Could not copy url to clipboard');
+            }
+        )
     }
 }
 
