@@ -334,21 +334,25 @@ class JoinRoomDialog extends Dialog {
         button.addEventListener('submit', e => this._join(e));
 
         //retrieve roomId from db and write to sessionStorage if not null/undefined
-        PersistentStorage.get('roomId').then((roomId) => {
-            if (roomId && !sessionStorage.getItem('roomId')) {
-                sessionStorage.setItem('roomId', roomId);
-                location.reload()
-            }
-        })
+        PersistentStorage.get('roomId')
+            .then((roomId) => {
+                if (roomId && !sessionStorage.getItem('roomId')) {
+                    sessionStorage.setItem('roomId', roomId);
+                    location.reload()
+                }
+            })
+            .catch(e => console.log(e));
     }
 
     _joinExit(e) {
         e.preventDefault();
         if (sessionStorage.getItem('roomId')) {
             sessionStorage.removeItem('roomId');
-            PersistentStorage.delete('roomId').then(() => {
-                location.reload();
-            });
+            PersistentStorage.delete('roomId')
+                .finally(() => {
+                    location.reload();
+                })
+                .catch(e => console.log(e));
         }else {
             this.show();
         }
@@ -360,16 +364,18 @@ class JoinRoomDialog extends Dialog {
         if (inputNum.length >= 6) {
             inputNum = inputNum.substring(0,6);
             sessionStorage.setItem("roomId", inputNum);
-            PersistentStorage.set("roomId", inputNum).then(() => {
-                location.reload();
-            });
+            PersistentStorage.set("roomId", inputNum)
+                .finally(() => {
+                    location.reload();
+                })
+                .catch(e => console.log(e));
         }
         else {
             inputNum = new ServerConnection()._randomNum(6);
             sessionStorage.setItem("roomId", inputNum);
-            PersistentStorage.set("roomId", inputNum).then(() => {
+            PersistentStorage.set("roomId", inputNum).finally(() => {
                 location.reload();
-            });
+            }).catch(e => console.log(e));
         }
     }
 }
@@ -667,7 +673,7 @@ class PersistentStorage {
     }
 
     static set(key, value) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('snapdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
@@ -679,11 +685,14 @@ class PersistentStorage {
                     resolve();
                 };
             }
+            DBOpenRequest.onerror = (e) => {
+                reject(e);
+            }
         })
     }
 
     static get(key) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('snapdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
@@ -695,11 +704,14 @@ class PersistentStorage {
                     resolve(objectStoreRequest.result);
                 };
             }
+            DBOpenRequest.onerror = (e) => {
+                reject(e);
+            }
         });
     }
 
     static delete(key) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('snapdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
@@ -710,6 +722,9 @@ class PersistentStorage {
                     console.log(`Request successful. Deleted key: ${key}`);
                     resolve();
                 };
+            }
+            DBOpenRequest.onerror = (e) => {
+                reject(e);
             }
         })
     }
