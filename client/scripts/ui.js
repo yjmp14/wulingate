@@ -389,15 +389,13 @@ class JoinRoomDialog extends Dialog {
     _shareRoomViaURL() {
         let url = new URL(location.href)
         url.searchParams.append('room_id', sessionStorage.getItem("roomId"))
-        console.debug(url);
-        navigator.clipboard.writeText(url.href).then(
-            () => {
+        navigator.clipboard.writeText(url.href)
+            .then(() => {
                 Events.fire('notify-user', 'URL copied to clipboard');
-            },
-            () => {
+            })
+            .catch(() => {
                 Events.fire('notify-user', 'Could not copy url to clipboard');
-            }
-        )
+            });
     }
 }
 
