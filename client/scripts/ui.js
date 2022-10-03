@@ -673,7 +673,7 @@ class PersistentStorage {
                 const db = e.target.result;
                 const transaction = db.transaction('keyval', 'readwrite');
                 const objectStore = transaction.objectStore('keyval');
-                const objectStoreRequest = objectStore.add(value, key);
+                const objectStoreRequest = objectStore.put(value, key);
                 objectStoreRequest.onsuccess = (event) => {
                     console.log(`Request successful. Added key-pair: ${key} - ${value}`);
                     resolve();
