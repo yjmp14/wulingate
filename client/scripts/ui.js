@@ -332,13 +332,23 @@ class JoinRoomDialog extends Dialog {
         this.$text = this.$el.querySelector('#roomInput');
         const button = this.$el.querySelector('form');
         button.addEventListener('submit', e => this._join(e));
+
+        //retrieve roomId from db and write to sessionStorage if not null/undefined
+        PersistentStorage.get('roomId').then((roomId) => {
+            if (roomId && roomId !== sessionStorage.getItem('roomId')) {
+                sessionStorage.setItem('roomId', roomId);
+                location.reload()
+            }
+        })
     }
 
     _joinExit(e) {
         e.preventDefault();
-        if (sessionStorage.getItem("roomId")) {
-            sessionStorage.removeItem("roomId");
-            location.reload();
+        if (sessionStorage.getItem('roomId')) {
+            sessionStorage.removeItem('roomId');
+            PersistentStorage.delete('roomId').then(() => {
+                location.reload();
+            });
         }else {
             this.show();
         }
@@ -350,12 +360,16 @@ class JoinRoomDialog extends Dialog {
         if (inputNum.length >= 6) {
             inputNum = inputNum.substring(0,6);
             sessionStorage.setItem("roomId", inputNum);
-            location.reload();
+            PersistentStorage.set("roomId", inputNum).then(() => {
+                location.reload();
+            });
         }
         else {
             inputNum = new ServerConnection()._randomNum(6);
             sessionStorage.setItem("roomId", inputNum);
-            location.reload();
+            PersistentStorage.set("roomId", inputNum).then(() => {
+                location.reload();
+            });
         }
     }
 }
@@ -635,6 +649,71 @@ class WebShareTargetUI {
     }
 }
 
+class PersistentStorage {
+    constructor() {
+        const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+        DBOpenRequest.onerror = (e) => {
+            console.log('Error initializing database: ');
+            console.log(e)
+        };
+        DBOpenRequest.onsuccess = () => {
+            console.log('Database initialised.');
+        };
+        DBOpenRequest.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            db.onerror = (e) => console.log('Error loading database: ' + e);
+            const objectStore = db.createObjectStore('keyval');
+        }
+    }
+
+    static set(key, value) {
+        return new Promise(resolve => {
+            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            DBOpenRequest.onsuccess = (e) => {
+                const db = e.target.result;
+                const transaction = db.transaction('keyval', 'readwrite');
+                const objectStore = transaction.objectStore('keyval');
+                const objectStoreRequest = objectStore.add(value, key);
+                objectStoreRequest.onsuccess = (event) => {
+                    console.log(`Request successful. Added key-pair: ${key} - ${value}`);
+                    resolve();
+                };
+            }
+        })
+    }
+
+    static get(key) {
+        return new Promise(resolve => {
+            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            DBOpenRequest.onsuccess = (e) => {
+                const db = e.target.result;
+                const transaction = db.transaction('keyval', 'readwrite');
+                const objectStore = transaction.objectStore('keyval');
+                const objectStoreRequest = objectStore.get(key);
+                objectStoreRequest.onsuccess = (event) => {
+                    console.log(`Request successful. Retrieved key-pair: ${key} - ${objectStoreRequest.result}`);
+                    resolve(objectStoreRequest.result);
+                };
+            }
+        });
+    }
+
+    static delete(key) {
+        return new Promise(resolve => {
+            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            DBOpenRequest.onsuccess = (e) => {
+                const db = e.target.result;
+                const transaction = db.transaction('keyval', 'readwrite');
+                const objectStore = transaction.objectStore('keyval');
+                const objectStoreRequest = objectStore.delete(key);
+                objectStoreRequest.onsuccess = (event) => {
+                    console.log(`Request successful. Deleted key: ${key}`);
+                    resolve();
+                };
+            }
+        })
+    }
+}
 
 class Snapdrop {
     constructor() {
@@ -655,6 +734,7 @@ class Snapdrop {
     }
 }
 
+const persistentStorage = new PersistentStorage();
 const snapdrop = new Snapdrop();
 
 if ('serviceWorker' in navigator) {
