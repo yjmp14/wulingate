@@ -335,7 +335,7 @@ class JoinRoomDialog extends Dialog {
 
         //retrieve roomId from db and write to sessionStorage if not null/undefined
         PersistentStorage.get('roomId').then((roomId) => {
-            if (roomId && roomId !== sessionStorage.getItem('roomId')) {
+            if (roomId && !sessionStorage.getItem('roomId')) {
                 sessionStorage.setItem('roomId', roomId);
                 location.reload()
             }
