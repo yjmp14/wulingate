@@ -8,12 +8,19 @@ class ServerConnection {
         Events.on('beforeunload', e => this._disconnect());
         Events.on('pagehide', e => this._disconnect());
         document.addEventListener('visibilitychange', e => this._onVisibilityChange());
+        Events.on('reconnect', e => this._reconnect());
     }
 
     _connect() {
         clearTimeout(this._reconnectTimer);
         if (this._isConnected() || this._isConnecting()) return;
-        const ws = new WebSocket(this._endpoint() + "?peerid=" + this._peerId() + "&code=" + this._peerCode()+ "&roomid=" + this._roomId());
+        let ws_url = new URL(this._endpoint());
+        ws_url.searchParams.append("peerid", this._peerId());
+        ws_url.searchParams.append("code", this._peerCode());
+        ws_url.searchParams.append("roomid", this._roomId());
+        ws_url.searchParams.append("roomkey", this._roomKey());
+        console.debug(ws_url.toString());
+        const ws = new WebSocket(ws_url.toString());
         ws.binaryType = 'arraybuffer';
         ws.onopen = e => console.log('WS: server connected');
         ws.onmessage = e => this._onMessage(e.data);
@@ -43,6 +50,21 @@ class ServerConnection {
                 break;
             case 'display-name':
                 Events.fire('display-name', msg);
+                break;
+            case 'key-room-created':
+                Events.fire('key-room-created', msg);
+                break;
+            case 'key-room-full':
+                Events.fire('key-room-full', msg);
+                break;
+            case 'key-room-room-id':
+                Events.fire('key-room-room-id', msg);
+                break;
+            case 'key-room-room-id-received':
+                Events.fire('key-room-room-id-received', msg);
+                break;
+            case 'key-room-deleted':
+                Events.fire('key-room-deleted', msg);
                 break;
             default:
                 console.error('WS: unkown message type', msg);
@@ -82,7 +104,7 @@ class ServerConnection {
         return peerId;
     }
     
-    _randomNum(length = 1) {
+    static _randomNum(length = 1) {
         let numStr = '';
         for (let i = 0; i < length; i++) {
             numStr += Math.floor(Math.random() * 10);
@@ -93,19 +115,18 @@ class ServerConnection {
     _peerCode() {
         let peerCode = sessionStorage.getItem("peerCode");
         if (!peerCode) {
-            peerCode = this._randomNum(4);
+            peerCode = ServerConnection._randomNum(4);
             sessionStorage.setItem("peerCode", peerCode);
         }
         return peerCode;
     }
     
     _roomId() {
-        let roomId = sessionStorage.getItem("roomId");
-        //if (!roomId) {
-        //    roomId = this._randomNum(6);
-        //    sessionStorage.setItem("roomId", roomId);
-        //}
-        return roomId;
+        return sessionStorage.getItem("roomId");
+    }
+
+    _roomKey() {
+        return sessionStorage.getItem("roomKey");
     }
 
     _endpoint() {
@@ -140,6 +161,11 @@ class ServerConnection {
 
     _isConnecting() {
         return this._socket && this._socket.readyState === this._socket.CONNECTING;
+    }
+
+    _reconnect() {
+        this._disconnect();
+        this._connect();
     }
 }
 

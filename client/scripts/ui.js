@@ -16,17 +16,20 @@ Events.on('display-name', e => {
     const $displayName = $('displayName');
     const $displayNote = $('displayNote');
     if (sessionStorage.getItem("roomId")){
-        $displayName.textContent = 'You are: ' + me.displayName + ' @ Room: ' + me.room;
+        $displayName.textContent = `You are: ${me.displayName} in this room`;
         $displayNote.textContent = 'You can be discovered by everyone in this room';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#exit');
         $('room').title = 'Exit The Room';
         $('share-room-url').removeAttribute('hidden');
-        $$('x-no-peers h2').textContent = 'Input room number on other devices to send files';
+        $('invite-user').removeAttribute('hidden');
+        $$('x-no-peers h2').textContent = 'Input room key on other devices to send files';
     } else {
-        $displayName.textContent = 'Your device code is: ' + me.displayName;
+        $displayName.textContent = 'You are: ' + me.displayName;
         $displayNote.textContent = 'You can be discovered by everyone on this network';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
         $('room').title = 'Join or Create a Room';
+        $('share-room-url').setAttribute('hidden', 1);
+        $('invite-user').setAttribute('hidden', 1);
         $$('x-no-peers h2').textContent = 'Open Snapdrop on other devices to send files';
     }
     $displayName.title = me.deviceName;
@@ -333,17 +336,24 @@ class JoinRoomDialog extends Dialog {
         this.$text = this.$el.querySelector('#roomInput');
         const button = this.$el.querySelector('form');
         button.addEventListener('submit', e => this._join(e));
-        $('share-room-url').addEventListener('click', () => this._shareRoomViaURL());
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('room_id')) {
             let inputNum = urlParams.get('room_id');
-            if (inputNum.length === 6 && !isNaN(inputNum)) {
-                sessionStorage.setItem("roomId", inputNum);
-                PersistentStorage.set("roomId", inputNum).then(() => {
-                    location.replace(location.origin); //remove room_id from url
-                });
-            }
+            sessionStorage.setItem("roomId", inputNum);
+            PersistentStorage.set("roomId", inputNum).finally(() => {
+                window.history.replaceState({}, "title**", '/'); //remove room_id from url
+                Events.fire('reconnect');
+            }).catch((e) => console.log(e));
+        } else if (urlParams.has('room_key')) {
+            // leave room and join new room via key
+            let inputNum = urlParams.get('room_key');
+            sessionStorage.setItem("roomKey", inputNum);
+            sessionStorage.removeItem("roomId");
+            PersistentStorage.delete("roomId").finally(() => {
+                window.history.replaceState({}, "title**", '/'); //remove room_key from url
+                Events.fire('reconnect');
+            }).catch((e) => console.log(e));
         }
 
         //retrieve roomId from db and write to sessionStorage if not null/undefined
@@ -351,7 +361,7 @@ class JoinRoomDialog extends Dialog {
             .then((roomId) => {
                 if (roomId && !sessionStorage.getItem('roomId')) {
                     sessionStorage.setItem('roomId', roomId);
-                    location.reload()
+                    Events.fire('reconnect');
                 }
             })
             .catch(e => console.log(e));
@@ -360,10 +370,11 @@ class JoinRoomDialog extends Dialog {
     _joinExit(e) {
         e.preventDefault();
         if (sessionStorage.getItem("roomId")) {
+            sessionStorage.removeItem("roomKey");
             sessionStorage.removeItem("roomId");
             PersistentStorage.delete('roomId')
                 .finally(() => {
-                    location.reload();
+                    Events.fire('reconnect');
                 })
                 .catch(e => console.log(e));
         }else {
@@ -376,32 +387,121 @@ class JoinRoomDialog extends Dialog {
         let inputNum = this.$text.value.replace(/\D/g,'');
         if (inputNum.length >= 6) {
             inputNum = inputNum.substring(0,6);
-            sessionStorage.setItem("roomId", inputNum);
-            PersistentStorage.set("roomId", inputNum)
-                .finally(() => {
-                    location.reload();
-                })
-                .catch(e => console.log(e));
+            sessionStorage.setItem("roomKey", inputNum);
+            sessionStorage.removeItem("roomId");
+            Events.fire('reconnect');
         }
         else {
-            inputNum = new ServerConnection()._randomNum(6);
-            sessionStorage.setItem("roomId", inputNum);
-            PersistentStorage.set("roomId", inputNum).finally(() => {
-                location.reload();
+            let roomKey = ServerConnection._randomNum(6);
+            let roomId = crypto.randomUUID();
+            sessionStorage.setItem("roomKey", roomKey);
+            sessionStorage.setItem("roomId", roomId);
+            PersistentStorage.set("roomId", roomId).finally(() => {
+                Events.fire('reconnect');
             }).catch(e => console.log(e));
         }
     }
+}
 
-    _shareRoomViaURL() {
-        let url = new URL(location.href)
-        url.searchParams.append('room_id', sessionStorage.getItem("roomId"))
+class InviteUserToRoomDialog extends Dialog {
+
+    constructor() {
+        super('inviteUserToRoomDialog');
+        const button = this.$el.querySelector('form');
+        button.addEventListener('submit', e => this._join(e));
+        $('share-room-url').addEventListener('click', () => this._shareRoomViaURL(true));
+        $('dialog-share-room-url').addEventListener('click', () => this._shareRoomViaURL(false));
+        $('invite-user').addEventListener('click', () => this._inviteUserToRoom());
+        $('delete-key-room').addEventListener('click', () => this._deleteKeyRoom());
+
+        Events.on('display-name', () => this._initDom());
+        Events.on('key-room-deleted', () => this._onKeyRoomDeleted());
+        Events.on('key-room-room-id-received', () => this._deleteKeyRoom());
+        Events.on('key-room-room-id', e => this._onRoomId(e));
+        Events.on('key-room-full', () => this._onKeyRoomFull());
+    }
+
+    _initDom() {
+        if (sessionStorage.getItem("roomKey") && sessionStorage.getItem("roomId")) {
+            this._startExpirationCountdown();
+            let roomKey = sessionStorage.getItem("roomKey");
+            $('room-key').innerText = `${roomKey.substring(0,3)} ${roomKey.substring(3,6)}`
+            this.show();
+        } else {
+            this.hide();
+        }
+    }
+
+    _startExpirationCountdown() {
+        clearInterval(this.roomKeyExpirationInterval)
+        clearTimeout(this.roomKeyExpirationTimeout);
+        $('room-key-expires').innerText = `10:00`;
+
+        let duration = 600;
+        this.roomKeyExpirationInterval = setInterval(() => {
+            duration -= 1;
+            let minutes = Math.floor(duration / 60).toString();
+            let seconds = (duration % 60).toString();
+            minutes = minutes.length === 2 ? minutes : "0" + minutes
+            seconds = seconds.length === 2 ? seconds : "0" + seconds
+            $('room-key-expires').innerText = `${minutes}:${seconds}`;
+        }, 1000)
+        this.roomKeyExpirationTimeout = setTimeout(() => this.hide(), 600000);
+    }
+
+    _shareRoomViaURL(permanent) {
+        let url = new URL(location.href);
+        let descriptor;
+        if (permanent) {
+            descriptor = "Permanent"
+            url.searchParams.append('room_id', sessionStorage.getItem("roomId"))
+        } else {
+            descriptor = "Temporary"
+            url.searchParams.append('room_key', sessionStorage.getItem("roomKey"))
+        }
         navigator.clipboard.writeText(url.href)
             .then(() => {
-                Events.fire('notify-user', 'URL copied to clipboard');
+                Events.fire('notify-user', `${descriptor} URL copied to clipboard`);
             })
             .catch(() => {
                 Events.fire('notify-user', 'Could not copy url to clipboard');
             });
+    }
+
+    _inviteUserToRoom() {
+        if (!sessionStorage.getItem("roomKey")) {
+            let roomKey = ServerConnection._randomNum(6);
+            sessionStorage.setItem("roomKey", roomKey);
+        }
+        Events.fire('reconnect');
+    }
+
+    _deleteKeyRoom() {
+        let roomKey = sessionStorage.getItem("roomKey");
+        sessionStorage.removeItem("roomKey");
+        Events.fire('notify-user', `Key ${roomKey} invalidated.`)
+        Events.fire('reconnect');
+    }
+
+    _onKeyRoomDeleted() {
+        let roomKey = sessionStorage.getItem("roomKey");
+        sessionStorage.removeItem("roomKey");
+        Events.fire('notify-user', `Key ${roomKey} has expired.`);
+    }
+
+    _onRoomId(e) {
+        sessionStorage.removeItem("roomKey");
+        sessionStorage.setItem("roomId", e.detail.roomId);
+        PersistentStorage.set("roomId", e.detail.roomId).finally(() => {
+            Events.fire('reconnect');
+            Events.fire('notify-user', `Joined room successfully.`);
+        }).catch(e => console.log(e));
+    }
+
+    _onKeyRoomFull() {
+        let roomKey = ServerConnection._randomNum(6);
+        sessionStorage.setItem("roomKey", roomKey);
+        Events.fire('reconnect');
     }
 }
 
@@ -765,6 +865,7 @@ class Snapdrop {
             const sendTextDialog = new SendTextDialog();
             const receiveTextDialog = new ReceiveTextDialog();
             const joinRoomDialog = new JoinRoomDialog();
+            const inviteUserToRoomDialog = new InviteUserToRoomDialog();
             const receivedMsgsDialog = new ReceivedMsgsDialog();
             const toast = new Toast();
             const notifications = new Notifications();
