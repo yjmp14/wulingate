@@ -19,7 +19,7 @@ Events.on('display-name', e => {
     if (sessionStorage.getItem("roomId")){
         $displayName.textContent = `You are: ${me.displayName}`;
         $roomId.textContent = `Room: ${me.roomId}`;
-        $roomId.style.setProperty("display", "block");
+        $roomId.removeAttribute('hidden');
         // $('footer').style("margin-bottom", "")
         $displayNote.textContent = 'You can be discovered by everyone in this room';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#exit');
@@ -30,7 +30,7 @@ Events.on('display-name', e => {
     } else {
         $displayName.textContent = 'You are: ' + me.displayName;
         $roomId.textContent = ``;
-        $roomId.style.setProperty("display", "none");
+        $roomId.setAttribute('hidden', 1);
         $displayNote.textContent = 'You can be discovered by everyone on this network';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
         $('room').title = 'Join or Create a Room';
@@ -454,7 +454,7 @@ class InviteUserToRoomDialog extends Dialog {
     _startExpirationCountdown() {
         clearInterval(this.roomKeyExpirationInterval)
         clearTimeout(this.roomKeyExpirationTimeout);
-        $('room-key-expires').innerText = `10:00`;
+        $('room-key-expires-time').innerText = `10:00`;
 
         let duration = 600;
         this.roomKeyExpirationInterval = setInterval(() => {
@@ -463,7 +463,7 @@ class InviteUserToRoomDialog extends Dialog {
             let seconds = (duration % 60).toString();
             minutes = minutes.length === 2 ? minutes : "0" + minutes
             seconds = seconds.length === 2 ? seconds : "0" + seconds
-            $('room-key-expires').innerText = `${minutes}:${seconds}`;
+            $('room-key-expires-time').innerText = `${minutes}:${seconds}`;
         }, 1000)
         this.roomKeyExpirationTimeout = setTimeout(() => this.hide(), 600000);
     }

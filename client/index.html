@@ -93,7 +93,7 @@
             <use xlink:href="#wifi-tethering" />
         </svg>
         <div id="displayName" placeholder="&nbsp;"></div>
-        <div id="roomId" placeholder="&nbsp;" style="display: none"></div>
+        <div id="roomId" placeholder="&nbsp;" hidden></div>
         <div id="displayNote" class="font-body2" placeholder="&nbsp;"></div>
     </footer>
     <!-- JoinRoom Dialog -->
@@ -119,13 +119,13 @@
                 <x-paper shadow="2">
                     <h3 class="center">Input room key on other devices</h3>
                     <div class="font-subheading center">
-                        <div style="color: gray">
+                        <div id="room-key-expires">
                             Expires in:
-                            <span id="room-key-expires" style="font-weight: bold; color:red">10:00</span>
+                            <span id="room-key-expires-time">10:00</span>
                         </div>
                     </div>
-                    <h1 class="center" id="room-key" style="font-size: 50px"></h1>
-                    <div class="center" id="room-key-qr-code" style="padding: inherit;"></div>
+                    <h1 class="center" id="room-key"></h1>
+                    <div class="center" id="room-key-qr-code"></div>
                     <div class="row-reverse">
                         <a class="button" id="dialog-share-room-url">Copy Temporary Link</a>
                         <a class="button" id="delete-key-room" close>Cancel</a>
