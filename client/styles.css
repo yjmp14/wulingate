@@ -316,12 +316,6 @@ footer .font-body2 {
     color: var(--primary-color);
 }
 
-@media (min-height: 800px) {
-    footer {
-        margin-bottom: 16px;
-    }
-}
-
 /* Dialog */
 
 x-dialog x-background {
