@@ -426,6 +426,18 @@ class InviteUserToRoomDialog extends Dialog {
             this._startExpirationCountdown();
             let roomKey = sessionStorage.getItem("roomKey");
             $('room-key').innerText = `${roomKey.substring(0,3)} ${roomKey.substring(3,6)}`
+            // Display the QR code for the url
+            const qr = new QRCode({
+                content: this._getShareRoomURL(false),
+                width: 80,
+                height: 80,
+                padding: 0,
+                background: "transparent",
+                color: getComputedStyle(document.body).getPropertyValue('--text-color'),
+                ecl: "L",
+                join: true
+            });
+            $('room-key-qr-code').innerHTML = qr.svg();
             this.show();
         } else {
             this.hide();
@@ -449,22 +461,24 @@ class InviteUserToRoomDialog extends Dialog {
         this.roomKeyExpirationTimeout = setTimeout(() => this.hide(), 600000);
     }
 
-    _shareRoomViaURL(permanent) {
+    _getShareRoomURL(permanent) {
         let url = new URL(location.href);
-        let descriptor;
         if (permanent) {
-            descriptor = "Permanent"
             url.searchParams.append('room_id', sessionStorage.getItem("roomId"))
         } else {
-            descriptor = "Temporary"
             url.searchParams.append('room_key', sessionStorage.getItem("roomKey"))
         }
-        navigator.clipboard.writeText(url.href)
+        return url.href;
+    }
+
+    _shareRoomViaURL(permanent) {
+        navigator.clipboard.writeText(this._getShareRoomURL(permanent))
             .then(() => {
-                Events.fire('notify-user', `${descriptor} URL copied to clipboard`);
+                Events.fire('notify-user', `${permanent ? "Permanent" : "Temporary"} URL copied to clipboard`);
             })
-            .catch(() => {
+            .catch((e) => {
                 Events.fire('notify-user', 'Could not copy url to clipboard');
+                console.log(e)
             });
     }
 
