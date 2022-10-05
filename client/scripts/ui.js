@@ -341,8 +341,14 @@ class JoinRoomDialog extends Dialog {
         super('joinRoomDialog');
         $('room').addEventListener('click', e => this._joinExit(e));
         this.$text = this.$el.querySelector('#roomInput');
-        const button = this.$el.querySelector('form');
-        button.addEventListener('submit', e => this._join(e));
+        let createJoinForm = this.$el.querySelector('form');
+        createJoinForm.addEventListener('submit', e => this._join(e));
+        this.$createJoinBtn = this.$el.querySelector('button');
+
+        this.$text.addEventListener('input', () => {
+            this.$text.value = this.$text.value.replace(/\D/g,'');
+            this.$createJoinBtn.textContent = this.$text.value.length === 6 ? 'Join' : 'Create';
+        })
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('room_id')) {
@@ -372,6 +378,13 @@ class JoinRoomDialog extends Dialog {
                 }
             })
             .catch(e => console.log(e));
+
+        Events.on('key-room-room-id', e => {
+            this.hide()
+            this.$text.value = '';
+            this.$createJoinBtn.textContent = 'Create';
+        });
+        Events.on('key-room-invalid-room-key', e => this._onInvalidRoomKey(e));
     }
 
     _joinExit(e) {
@@ -405,8 +418,15 @@ class JoinRoomDialog extends Dialog {
             sessionStorage.setItem("roomId", roomId);
             PersistentStorage.set("roomId", roomId).finally(() => {
                 Events.fire('reconnect');
+                this.hide();
+                this.$text.value = '';
+                this.$createJoinBtn.textContent = 'Create';
             }).catch(e => console.log(e));
         }
+    }
+
+    _onInvalidRoomKey(e) {
+        Events.fire('notify-user', `Key ${e.detail.roomKey} invalid`)
     }
 }
 

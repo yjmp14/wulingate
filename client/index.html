@@ -54,12 +54,12 @@
                 <use xlink:href="#enter" />
             </svg>
         </a>
-        <a id="share-room-url" class="icon-button" title="Share room via permanent Link" hidden>
+        <a id="share-room-url" class="icon-button" title="Copy Permanent Link To Room" hidden>
             <svg class="icon">
                 <use xlink:href="#shareroomurl" />
             </svg>
         </a>
-        <a id="invite-user" class="icon-button" title="Invite user to room" hidden>
+        <a id="invite-user" class="icon-button" title="Invite To Room Via Room Key" hidden>
             <svg class="icon">
                 <use xlink:href="#inviteuser" />
             </svg>
@@ -103,9 +103,9 @@
                 <x-paper shadow="2">
                     <h3>Room Key (6 Digits)</h3>
                     <div class="font-subheading">Create new room or enter key to join.</div>
-                    <input type="tel" id="roomInput" class="textarea" autocomplete="off" maxlength="6" oninput="value=value.replace(/\D/g,'');let btn=$('joinRoomDialog').querySelector('button');if(value.length==6){btn.textContent='Join';}else{btn.textContent='Create';}" autofocus contenteditable>
+                    <input type="tel" id="roomInput" class="textarea" autocomplete="off" maxlength="6" autofocus contenteditable>
                     <div class="row-reverse">
-                        <button class="button" type="submit" close>Create</button>
+                        <button class="button" type="submit">Create</button>
                         <a class="button" close>Cancel</a>
                     </div>
                 </x-paper>

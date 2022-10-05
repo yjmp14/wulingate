@@ -128,9 +128,16 @@ class SnapdropServer {
     }
 
     _joinKeyRoom(peer) {
-        // if keyRoom doesn't exist, create it
-        if (!this._keyRooms[peer.roomKey]) {
-            if (peer.roomIsIp) return;
+        if (!peer.roomIsIp) {
+            //goal: create keyRoom
+            if (this._keyRooms[peer.roomKey]) {
+                // peer tries to create new keyRoom that already exists
+                this._send(peer, {
+                    type: 'key-room-full',
+                    roomKey: peer.roomKey
+                });
+                return;
+            }
             this._keyRooms[peer.roomKey] = {};
             this._send(peer, {
                 type: 'key-room-created',
@@ -138,14 +145,18 @@ class SnapdropServer {
             });
             // add peer to room
             this._keyRooms[peer.roomKey][peer.id] = peer;
+            // delete room automatically after 10 min
             this.keyRoomTimer = setTimeout(() => this._deleteKeyRoom(peer.roomKey), 600000)
-        } else if (!peer.roomIsIp) {
-            // peer tries to create new keyRoom that already exists
-            this._send(peer, {
-                type: 'key-room-full',
-                roomKey: peer.roomKey
-            });
-        } else if (peer.roomIsIp) {
+        } else {
+            //goal: join keyRoom
+            if (!this._keyRooms[peer.roomKey]) {
+                // no keyRoom exists to roomKey -> invalid
+                this._send(peer, {
+                    type: 'key-room-invalid-room-key',
+                    roomKey: peer.roomKey
+                });
+                return;
+            }
             // keyRoom exists and peer wants to join room
             const firstPeer = Object.values(this._keyRooms[peer.roomKey])[0];
             this._send(peer, {

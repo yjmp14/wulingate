@@ -66,6 +66,9 @@ class ServerConnection {
             case 'key-room-deleted':
                 Events.fire('key-room-deleted', msg);
                 break;
+            case 'key-room-invalid-room-key':
+                Events.fire('key-room-invalid-room-key', msg);
+                break;
             default:
                 console.error('WS: unkown message type', msg);
         }
