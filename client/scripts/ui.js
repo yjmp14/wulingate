@@ -14,9 +14,13 @@ if (!window.isRtcSupported){alert('Current browser doesn\'t support this website
 Events.on('display-name', e => {
     const me = e.detail.message;
     const $displayName = $('displayName');
+    const $roomId = $('roomId');
     const $displayNote = $('displayNote');
     if (sessionStorage.getItem("roomId")){
-        $displayName.textContent = `You are: ${me.displayName} in this room`;
+        $displayName.textContent = `You are: ${me.displayName}`;
+        $roomId.textContent = `Room: ${me.roomId}`;
+        $roomId.style.setProperty("display", "block");
+        // $('footer').style("margin-bottom", "")
         $displayNote.textContent = 'You can be discovered by everyone in this room';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#exit');
         $('room').title = 'Exit The Room';
@@ -25,6 +29,8 @@ Events.on('display-name', e => {
         $$('x-no-peers h2').textContent = 'Input room key on other devices to send files';
     } else {
         $displayName.textContent = 'You are: ' + me.displayName;
+        $roomId.textContent = ``;
+        $roomId.style.setProperty("display", "none");
         $displayNote.textContent = 'You can be discovered by everyone on this network';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
         $('room').title = 'Join or Create a Room';
@@ -930,12 +936,14 @@ Events.on('load', () => {
         c.height = h;
         let offset = h > 420 ? 90 : 72;
         offset = h > 800 ? 106 : offset;
+        offset += sessionStorage.getItem('roomId') ? 20 : 0;
         x0 = w / 2;
         y0 = h - offset;
         dw = Math.max(w, h, 1000) / 13;
         drawCircles();
     }
     window.onresize = init;
+    Events.on('reconnect', () => init());
 
     function drawCircle(radius) {
         ctx.beginPath();
