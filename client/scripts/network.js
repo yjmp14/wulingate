@@ -13,7 +13,7 @@ class ServerConnection {
     _connect() {
         clearTimeout(this._reconnectTimer);
         if (this._isConnected() || this._isConnecting()) return;
-        const ws = new WebSocket(this._endpoint());
+        const ws = new WebSocket(this._endpoint() + "?peerid=" + this._peerId() + "&code=" + this._peerCode()+ "&roomid=" + this._roomId());
         ws.binaryType = 'arraybuffer';
         ws.onopen = e => console.log('WS: server connected');
         ws.onmessage = e => this._onMessage(e.data);
@@ -52,6 +52,60 @@ class ServerConnection {
     send(message) {
         if (!this._isConnected()) return;
         this._socket.send(JSON.stringify(message));
+    }
+
+    _peerId() {
+        let peerId = sessionStorage.getItem("peerId");
+        if (!peerId) {
+            peerId = '';
+            for (let ii = 0; ii < 32; ii += 1) {
+                switch (ii) {
+                    case 8:
+                    case 20:
+                        peerId += '-';
+                        peerId += (Math.random() * 16 | 0).toString(16);
+                        break;
+                    case 12:
+                        peerId += '-';
+                        peerId += '4';
+                        break;
+                    case 16:
+                        peerId += '-';
+                        peerId += (Math.random() * 4 | 8).toString(16);
+                        break;
+                    default:
+                        peerId += (Math.random() * 16 | 0).toString(16);
+                }
+            }
+            sessionStorage.setItem("peerId", peerId);
+        }
+        return peerId;
+    }
+    
+    _randomNum(length = 1) {
+        let numStr = '';
+        for (let i = 0; i < length; i++) {
+            numStr += Math.floor(Math.random() * 10);
+        }
+        return numStr;
+    }
+    
+    _peerCode() {
+        let peerCode = sessionStorage.getItem("peerCode");
+        if (!peerCode) {
+            peerCode = this._randomNum(4);
+            sessionStorage.setItem("peerCode", peerCode);
+        }
+        return peerCode;
+    }
+    
+    _roomId() {
+        let roomId = sessionStorage.getItem("roomId");
+        //if (!roomId) {
+        //    roomId = this._randomNum(6);
+        //    sessionStorage.setItem("roomId", roomId);
+        //}
+        return roomId;
     }
 
     _endpoint() {
@@ -186,7 +240,7 @@ class Peer {
     }
 
     _onChunkReceived(chunk) {
-        if(!chunk.byteLength) return;
+        if(!(chunk.byteLength || chunk.size)) return;
         
         this._digester.unchunk(chunk);
         const progress = this._digester.progress;
@@ -519,10 +573,9 @@ class Events {
     }
 }
 
-
 RTCPeer.config = {
     'sdpSemantics': 'unified-plan',
-    'iceServers': [{
-        urls: 'stun:stun.l.google.com:19302'
-    }]
+    'iceServers': [
+    urls: 'stun:stun.l.google.com:19302'
+    ]
 }

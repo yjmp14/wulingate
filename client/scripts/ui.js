@@ -4,12 +4,30 @@ const isURL = text => /^((https?:\/\/|www)[^\s]+)/g.test(text.toLowerCase());
 window.isDownloadSupported = (typeof document.createElement('a').download !== 'undefined');
 window.isProductionEnvironment = !window.location.host.startsWith('localhost');
 window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+window.WeChat = /MicroMessenger|wxwork/.test(navigator.userAgent);
 
-// set display name
+// Browser compatibility alert. 
+if (window.WeChat){alert('WeChat Built-in browser doesn\'t support download, please tap ··· in the upper right corner and select Open in Browser.');}
+if (!window.isRtcSupported){alert('Current browser doesn\'t support this website\'s function, it\'s recommended to use Chrome, Edge, FireFox or Safari.');}
+
+// set display name, room icon and tip text. 
 Events.on('display-name', e => {
     const me = e.detail.message;
-    const $displayName = $('displayName')
-    $displayName.textContent = 'You are known as ' + me.displayName;
+    const $displayName = $('displayName');
+    const $displayNote = $('displayNote');
+    if (sessionStorage.getItem("roomId")){
+        $displayName.textContent = 'You are: ' + me.displayName + ' @ Room: ' + me.room;
+        $displayNote.textContent = 'You can be discovered by everyone in this room';
+        $('room').querySelector('svg use').setAttribute('xlink:href', '#exit');
+        $('room').title = 'Exit The Room';
+        $$('x-no-peers h2').textContent = 'Input room number on other devices to send files';
+    } else {
+        $displayName.textContent = 'Your device code is: ' + me.displayName;
+        $displayNote.textContent = 'You can be discovered by everyone on this network';
+        $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
+        $('room').title = 'Join or Create a Room';
+        $$('x-no-peers h2').textContent = 'Open Snapdrop on other devices to send files';
+    }
     $displayName.title = me.deviceName;
 });
 
@@ -24,7 +42,7 @@ class PeersUI {
     }
 
     _onPeerJoined(peer) {
-        if ($(peer.id)) return; // peer already exists
+        if ($(peer.id) || (peer.id == sessionStorage.getItem("peerId"))) return; // peer already exists. prevent to show itself.
         const peerUI = new PeerUI(peer);
         $$('x-peers').appendChild(peerUI.$el);
         setTimeout(e => window.animateBackground(false), 1750); // Stop animation
@@ -74,7 +92,7 @@ class PeerUI {
 
     html() {
         return `
-            <label class="column center" title="Click to send files or right click to send a text">
+            <label class="column center" title="Click to send files or right click to send a message">
                 <input type="file" multiple>
                 <x-icon shadow="1">
                     <svg class="icon"><use xlink:href="#"/></svg>
@@ -205,7 +223,6 @@ class PeerUI {
     }
 }
 
-
 class Dialog {
     constructor(id) {
         this.$el = $(id);
@@ -303,17 +320,106 @@ class ReceiveDialog extends Dialog {
         this._dequeueFile();
     }
 
-
     _autoDownload(){
         return !this.$el.querySelector('#autoDownload').checked
     }
 }
 
+class JoinRoomDialog extends Dialog {
+    constructor() {
+        super('joinRoomDialog');
+        $('room').addEventListener('click', e => this._joinExit(e));
+        this.$text = this.$el.querySelector('#roomInput');
+        const button = this.$el.querySelector('form');
+        button.addEventListener('submit', e => this._join(e));
+    }
+
+    _joinExit(e) {
+        e.preventDefault();
+        if (sessionStorage.getItem("roomId")) {
+            sessionStorage.removeItem("roomId");
+            location.reload();
+        }else {
+            this.show();
+        }
+    }
+
+    _join(e) {
+        e.preventDefault();
+        let inputNum = this.$text.value.replace(/\D/g,'');
+        if (inputNum.length >= 6) {
+            inputNum = inputNum.substring(0,6);
+            sessionStorage.setItem("roomId", inputNum);
+            location.reload();
+        }
+        else {
+            inputNum = new ServerConnection()._randomNum(6);
+            sessionStorage.setItem("roomId", inputNum);
+            location.reload();
+        }
+    }
+}
+
+class ReceivedMsgsDialog extends Dialog {
+    constructor() {
+        super('receivedMsgsDialog');
+        $('messages').addEventListener('click', e => this._showMsgs(e));
+        if (!$$('.MsgItem') && sessionStorage.getItem("messages")) {
+            let msgs = JSON.parse(sessionStorage.getItem("messages"));
+            for (let i=msgs.length-1; i >= 0; i--) {
+                this._updateMsgsBox(msgs[i]);
+            }
+        }
+    }
+
+    _showMsgs(e){
+        e.preventDefault();
+        this.show();
+    }
+
+    async _onCopy(e){
+        e.preventDefault();
+        await navigator.clipboard.writeText(e.target.closest('.MsgItem').querySelector('.MsgContent').textContent);
+        Events.fire('notify-user', 'Copied to clipboard');
+    }
+
+    html() {
+        return `
+            <div class="MsgTextBox">
+                <div class="MsgContent"></div>
+            </div>
+            <a herf="#" class="copy center" title="Copy to clipboard">
+                <svg>
+                    <use xlink:href="#icon-copy" />
+                </svg>
+            </a>`
+    }
+
+    _initMsgItem() {
+        const item = document.createElement('div');
+        item.className = 'MsgItem';
+        item.innerHTML = this.html();
+        this.$item = item;
+    }
+    
+    _updateMsgsBox(content) {
+        this._initMsgItem();
+        this.$item.querySelector(".MsgContent").textContent = content;
+        $('MsgsBox').prepend(this.$item);
+        let msgsItem = $('MsgsBox').querySelectorAll('.MsgItem');
+        if (msgsItem[20]) {$('MsgsBox').removeChild(msgsItem[20]);}
+        $('messages').style.display = 'flex';
+        let copyBtn = $('MsgsBox').querySelectorAll('.copy');
+        for (let i=0; i < copyBtn.length; i++) {
+            copyBtn[i].addEventListener("click", e => this._onCopy(e));
+        }
+    }
+}
 
 class SendTextDialog extends Dialog {
     constructor() {
         super('sendTextDialog');
-        Events.on('text-recipient', e => this._onRecipient(e.detail))
+        Events.on('text-recipient', e => this._onRecipient(e.detail));
         this.$text = this.$el.querySelector('#textInput');
         const button = this.$el.querySelector('form');
         button.addEventListener('submit', e => this._send(e));
@@ -345,6 +451,7 @@ class SendTextDialog extends Dialog {
             to: this._recipient,
             text: this.$text.innerText
         });
+        this.$text.innerText = "";
     }
 }
 
@@ -371,6 +478,19 @@ class ReceiveTextDialog extends Dialog {
         }
         this.show();
         window.blop.play();
+        let msgs = new Array();
+        let receivedMsgsDialog = new ReceivedMsgsDialog();
+        if (sessionStorage.getItem("messages")){
+            msgs = JSON.parse(sessionStorage.getItem("messages"));
+            msgs.unshift(text);
+            if (msgs[20]) { msgs.splice(20);}
+            sessionStorage.setItem("messages", JSON.stringify(msgs));
+            receivedMsgsDialog._updateMsgsBox(text);
+        } else {
+            msgs[0] = text;
+            sessionStorage.setItem("messages", JSON.stringify(msgs));
+            receivedMsgsDialog._updateMsgsBox(text);
+        }
     }
 
     async _onCopy() {
@@ -392,7 +512,6 @@ class Toast extends Dialog {
     }
 }
 
-
 class Notifications {
 
     constructor() {
@@ -403,19 +522,20 @@ class Notifications {
         if (Notification.permission !== 'granted') {
             this.$button = $('notification');
             this.$button.removeAttribute('hidden');
-            this.$button.addEventListener('click', e => this._requestPermission());
+            this.$button.addEventListener('click', e => this._requestPermission(e));
         }
         Events.on('text-received', e => this._messageNotification(e.detail.text));
         Events.on('file-received', e => this._downloadNotification(e.detail.name));
     }
 
-    _requestPermission() {
+    _requestPermission(e) {
+        e.preventDefault();
         Notification.requestPermission(permission => {
             if (permission !== 'granted') {
                 Events.fire('notify-user', Notifications.PERMISSION_ERROR || 'Error');
                 return;
             }
-            this._notify('Even more snappy sharing!');
+            this._notify('Notifications enabled.');
             this.$button.setAttribute('hidden', 1);
         });
     }
@@ -453,7 +573,7 @@ class Notifications {
                 this._bind(notification, e => window.open(message, '_blank', null, true));
             } else {
                 const notification = this._notify(message, 'Click to copy text');
-                this._bind(notification, e => this._copyText(message, notification));
+                this._bind(notification, e => this._copyText(message, notification)); //Only work with blink core desktop browsers, like Chrome, Edge. 
             }
         }
     }
@@ -486,7 +606,6 @@ class Notifications {
         }
     }
 }
-
 
 class NetworkStatusUI {
 
@@ -534,6 +653,8 @@ class Snapdrop {
             const receiveDialog = new ReceiveDialog();
             const sendTextDialog = new SendTextDialog();
             const receiveTextDialog = new ReceiveTextDialog();
+            const joinRoomDialog = new JoinRoomDialog();
+            const receivedMsgsDialog = new ReceivedMsgsDialog();
             const toast = new Toast();
             const notifications = new Notifications();
             const networkStatusUI = new NetworkStatusUI();
@@ -543,8 +664,6 @@ class Snapdrop {
 }
 
 const snapdrop = new Snapdrop();
-
-
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js')
@@ -574,8 +693,6 @@ Events.on('load', () => {
     style.width = '100%';
     style.position = 'absolute';
     style.zIndex = -1;
-    style.top = 0;
-    style.left = 0;
     let ctx = c.getContext('2d');
     let x0, y0, w, h, dw;
 
@@ -584,8 +701,8 @@ Events.on('load', () => {
         h = window.innerHeight;
         c.width = w;
         c.height = h;
-        let offset = h > 380 ? 100 : 65;
-        offset = h > 800 ? 116 : offset;
+        let offset = h > 420 ? 90 : 72;
+        offset = h > 800 ? 106 : offset;
         x0 = w / 2;
         y0 = h - offset;
         dw = Math.max(w, h, 1000) / 13;

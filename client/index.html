@@ -11,6 +11,7 @@
     <meta name="color-scheme" content="dark light">
     <meta name="apple-mobile-web-app-capable" content="no">
     <meta name="apple-mobile-web-app-title" content="Snapdrop">
+    <meta name="application-name" content="Snapdrop">
     <!-- Descriptions -->
     <meta name="description" content="Instantly share images, videos, PDFs, and links with people nearby. Peer2Peer and Open Source. No Setup, No Signup.">
     <meta name="keywords" content="File, Transfer, Share, Peer2Peer">
@@ -43,17 +44,27 @@
                 <use xlink:href="#info-outline" />
             </svg>
         </a>
-        <a href="#" id="theme" class="icon-button" title="Switch Darkmode/Lightmode" >
+        <a id="theme" class="icon-button" title="Switch Darkmode/Lightmode" >
             <svg class="icon">
                 <use xlink:href="#icon-theme" />
             </svg>
         </a>
-        <a href="#" id="notification" class="icon-button" title="Enable Notifications" hidden>
+        <a id="room" class="icon-button" >
+            <svg class="icon">
+                <use xlink:href="#enter" />
+            </svg>
+        </a>
+        <a id="messages" style="display: none;" class="icon-button" title="Show Received Messages" >
+            <svg class="icon">
+                <use xlink:href="#clipboard" />
+            </svg>
+        </a>
+        <a id="notification" class="icon-button" title="Enable Notifications" hidden>
             <svg class="icon">
                 <use xlink:href="#notifications" />
             </svg>
         </a>
-        <a href="#" id="install" class="icon-button" title="Install Snapdrop" hidden>
+        <a id="install" class="icon-button" title="Install Snapdrop" hidden>
             <svg class="icon">
                 <use xlink:href="#homescreen" />
             </svg>
@@ -62,7 +73,8 @@
     <!-- Peers -->
     <x-peers class="center"></x-peers>
     <x-no-peers>
-        <h2>Open Snapdrop on other devices to send files</h2>
+        <h2 placeholder="&nbsp;"></h2>
+        <p style="color:#969696;">Do not use proxy or VPN to access this website</p>
     </x-no-peers>
     <x-instructions desktop="Click to send files or right click to send a message" mobile="Tap to send files or long tap to send a message"></x-instructions>
     <!-- Footer -->
@@ -70,9 +82,40 @@
         <svg class="icon logo">
             <use xlink:href="#wifi-tethering" />
         </svg>
-        <div id="displayName" placeholder="The easiest way to transfer data across devices"></div>
-        <div class="font-body2">You can be discovered by everyone on this network</div>
+        <div id="displayName" placeholder="&nbsp;"></div>
+        <div id="displayNote" class="font-body2" placeholder="&nbsp;"></div>
     </footer>
+    <!-- JoinRoom Dialog -->
+    <x-dialog id="joinRoomDialog">
+        <form action="#">
+            <x-background class="full center">
+                <x-paper shadow="2">
+                    <h3>Room Number (6 Digits)</h3>
+                    <div class="font-subheading">Note: No need to input to create a room.</div>
+                    <input type="tel" id="roomInput" class="textarea" autocomplete="off" maxlength="6" oninput="value=value.replace(/\D/g,'');let btn=$('joinRoomDialog').querySelector('button');if(value.length==6){btn.textContent='Join';}else{btn.textContent='Create';}" autofocus contenteditable>
+                    <div class="row-reverse">
+                        <button class="button" type="submit" close>Create</button>
+                        <a class="button" close>Cancel</a>
+                    </div>
+                </x-paper>
+            </x-background>
+        </form>
+    </x-dialog>
+    <!-- Received Messages Dialog -->
+    <x-dialog id="receivedMsgsDialog">
+        <x-background class="full center">
+            <x-paper shadow="2">
+                <a class="icon-button" close>
+                    <svg class="icon">
+                        <use xlink:href="#close" />
+                    </svg>
+                </a>
+                <h3>Last 20 Received Messages</h3>
+                <div id="MsgsBox">
+                </div>
+            </x-paper>
+        </x-background>
+    </x-dialog>
     <!-- Receive Dialog -->
     <x-dialog id="receiveDialog">
         <x-background class="full center">
@@ -141,6 +184,7 @@
             </svg>
             <h1>Snapdrop</h1>
             <div class="font-subheading">The easiest way to transfer files across devices</div>
+            <div class="font-subheading">This website is based on Snapdrop open source project</div>
             <div class="row">
                 <a class="icon-button" target="_blank" href="https://github.com/RobinLinus/snapdrop" title="Snapdrop on Github" rel="noreferrer">
                     <svg class="icon">
@@ -186,7 +230,7 @@
         <symbol id=close viewBox="0 0 24 24">
             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
         </symbol>
-        <symbol id=help-outline viewBox="0 0 24 24">
+        <symbol id=help-outline viewBox="2 2 20 20">
             <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"></path>
         </symbol>
         <symbol id="twitter">
@@ -209,6 +253,18 @@
         </symbol>
         <symbol id="icon-theme" viewBox="0 0 24 24">
          <rect fill="none" height="24" width="24"/><path d="M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36c-0.98,1.37-2.58,2.26-4.4,2.26 c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/>
+        </symbol>
+        <symbol id="enter" viewBox="-170 -150 1229 1229">
+            <path d="M640 576L640 448 896 448 896 320 640 320 640 192 448 336 448 192 192 64 704 64 704 256 768 256 768 0 64 0 64 832 448 1024 448 832 768 832 768 512 704 512 704 768 448 768 448 432z"/>
+        </symbol>
+        <symbol id="exit" viewBox="-170 -150 1229 1229">
+            <path d="M640 768H384V192L128 64h512v192h64V0H0v832l384 192V832h320V512h-64V768zM1024 384L768 192v128H512v128h256v128L1024 384z"/>
+        </symbol>
+        <symbol id="clipboard" viewBox="-3 -2 22 22">
+            <path d="M13,0H3C1.35,0,0,1.35,0,3v12c0,1.65,1.35,3,3,3h10c1.65,0,3-1.35,3-3V3C16,1.35,14.65,0,13,0z M5,2h6v1c0,0.55-0.45,1-1,1H6C5.45,4,5,3.55,5,3V2z M14,15c0,0.55-0.45,1-1,1H3c-0.55,0-1-0.45-1-1V3c0-0.55,0.45-1,1-1h1 c0,0.26,0,0.6,0,1c0,1.1,0.9,2,2,2h4c1.1,0,2-0.9,2-2c0-0.4,0-0.74,0-1h1c0.55,0,1,0.45,1,1V15z M12,14H4c-0.28,0-0.5-0.22-0.5-0.5 S3.72,13,4,13h8c0.28,0,0.5,0.22,0.5,0.5S12.28,14,12,14z M12,11H4c-0.28,0-0.5-0.22-0.5-0.5S3.72,10,4,10h8 c0.28,0,0.5,0.22,0.5,0.5S12.28,11,12,11z M12,8H4C3.72,8,3.5,7.78,3.5,7.5S3.72,7,4,7h8c0.28,0,0.5,0.22,0.5,0.5S12.28,8,12,8z"/>
+        </symbol>
+        <symbol id="icon-copy" viewBox="0 0 200 200">
+            <path d="M145,17.5H90a30.09,30.09,0,0,0-30,30H55a30.09,30.09,0,0,0-30,30v75a30.09,30.09,0,0,0,30,30h55a30.09,30.09,0,0,0,30-30h5a30.09,30.09,0,0,0,30-30v-75a30.09,30.09,0,0,0-30-30Zm-25,135a10,10,0,0,1-10,10H55a10,10,0,0,1-10-10v-75a10,10,0,0,1,10-10h55a10,10,0,0,1,10,10Zm35-30a10,10,0,0,1-10,10h-5v-55a30.09,30.09,0,0,0-30-30H80a10,10,0,0,1,10-10h55a10,10,0,0,1,10,10v75Zm-55,10H65a10,10,0,0,0,0,20h35a10,10,0,0,0,0-20Zm0-30H65a10,10,0,0,0,0,20h35a10,10,0,0,0,0-20Z"/>
         </symbol>
     </svg>
     <!-- Scripts -->
