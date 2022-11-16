@@ -112,8 +112,7 @@ class ServerConnection {
         // hack to detect if deployment or development environment
         const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws';
         const webrtc = window.isRtcSupported ? '/webrtc' : '/fallback';
-        const url = protocol + '://' + location.host + '/server' + webrtc;
-        //const url = protocol + '://' + location.host + location.pathname + 'server' + webrtc;
+        const url = protocol + '://' + location.host + location.pathname + 'server' + webrtc;
         return url;
     }
 
@@ -313,7 +312,6 @@ class RTCPeer extends Peer {
             ordered: true,
             reliable: true // Obsolete. See https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel/reliable
         });
-        channel.binaryType = 'arraybuffer';
         channel.onopen = e => this._onChannelOpened(e);
         this._conn.createOffer().then(d => this._onDescription(d)).catch(e => this._onError(e));
     }
@@ -350,6 +348,7 @@ class RTCPeer extends Peer {
     _onChannelOpened(event) {
         console.log('RTC: channel opened with', this._peerId);
         const channel = event.channel || event.target;
+        channel.binaryType = 'arraybuffer';
         channel.onmessage = e => this._onMessage(e.data);
         channel.onclose = e => this._onChannelClosed();
         this._channel = channel;
@@ -503,7 +502,8 @@ class FileChunker {
         this._offset += chunk.byteLength;
         this._partitionSize += chunk.byteLength;
         this._onChunk(chunk);
-        if (this._isPartitionEnd() || this.isFileEnd()) {
+        if (this.isFileEnd()) return;
+        if (this._isPartitionEnd()) {
             this._onPartitionEnd(this._offset);
             return;
         }
@@ -567,12 +567,16 @@ class Events {
     static on(type, callback) {
         return window.addEventListener(type, callback, false);
     }
+
+    static off(type, callback) {
+        return window.removeEventListener(type, callback, false);
+    }
 }
 
 RTCPeer.config = {
     'sdpSemantics': 'unified-plan',
     'iceServers': [
     {urls: 'turn:zp.wulingate.com', username: 'hmzJ0OHZivkod703', credential: 'KDF04PBYD9xHAp0s' },
-    {urls: 'turn:om.wulingate.com', username: 'hmzJ0OHZivkod703', credential: 'KDF04PBYD9xHAp0s' }
+    {urls: 'turn:km.wulingate.com', username: 'hmzJ0OHZivkod703', credential: 'KDF04PBYD9xHAp0s' }
     ]
 }

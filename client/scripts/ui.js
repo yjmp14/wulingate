@@ -547,7 +547,7 @@ class Notifications {
         });
     }
 
-    _notify(message, body, closeTimeout = 20000) {
+    _notify(message, body) {
         const config = {
             body: body,
             icon: '/images/logo_transparent_128x128.png',
@@ -562,9 +562,13 @@ class Notifications {
         }
 
         // Notification is persistent on Android. We have to close it manually
-        if (closeTimeout) {
-            setTimeout(_ => notification.close(), closeTimeout);
-        }
+        const visibilitychangeHandler = () => {                             
+            if (document.visibilityState === 'visible') {    
+                notification.close();
+                Events.off('visibilitychange', visibilitychangeHandler);
+            }                                                       
+        };                                                                                
+        Events.on('visibilitychange', visibilitychangeHandler);
 
         return notification;
     }
