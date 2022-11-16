@@ -7,10 +7,15 @@ window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 window.WeChat = /MicroMessenger|wxwork/.test(navigator.userAgent);
 
 // Browser compatibility alert. 
-if (window.WeChat){alert('WeChat Built-in browser doesn\'t support download, please tap ··· in the upper right corner and select Open in Browser.');}
-if (!window.isRtcSupported){alert('Current browser doesn\'t support this website\'s function, it\'s recommended to use Chrome, Edge, FireFox or Safari.');}
-// If user language is Chinese, show language switch button.
-if (navigator.language.substr(0,2) == 'zh'){$('language').removeAttribute('hidden');}
+if (window.WeChat){alert('微信内置浏览器不支持下载，请点右上角 ··· 在浏览器打开。');}
+if (!window.isRtcSupported){alert('当前浏览器不支持本网站功能，推荐使用 Chrome、Edge、FireFox、Safari。');}
+// If user language is not Chinese, show language switch button. Auto switch to English site.
+if (navigator.language.substr(0,2) != 'zh'){
+    $('language').removeAttribute('hidden');
+    if (document.referrer != 'https://www.wulingate.com/en/'){
+        window.location.href='https://www.wulingate.com/en/';
+    }
+}
 
 // set display name, room icon and tip text. 
 Events.on('display-name', e => {
@@ -18,17 +23,17 @@ Events.on('display-name', e => {
     const $displayName = $('displayName');
     const $displayNote = $('displayNote');
     if (sessionStorage.getItem("roomId")){
-        $displayName.textContent = 'You are: ' + me.displayName + ' @ Room: ' + me.room;
-        $displayNote.textContent = 'You can be discovered by everyone in this room';
+        $displayName.textContent = '我是: ' + me.displayName + ' @ 房间: ' + me.room;
+        $displayNote.textContent = '可被同房间内所有人发现';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#exit');
-        $('room').title = 'Exit The Room';
-        $$('x-no-peers h2').textContent = 'Input room number on other devices to send files';
-    } else {
-        $displayName.textContent = 'Your device code is: ' + me.displayName;
-        $displayNote.textContent = 'You can be discovered by everyone on this network';
+        $('room').title = '退出该房间';
+        $$('x-no-peers h2').textContent = '在其他设备上输入房间号以传送文件';
+    }else {
+        $displayName.textContent = '本设备代码为: ' + me.displayName;
+        $displayNote.textContent = '可被局域网内所有人发现';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
-        $('room').title = 'Join or Create a Room';
-        $$('x-no-peers h2').textContent = 'Open WulinGate on other devices to send files';
+        $('room').title = '加入或新建一个房间';
+        $$('x-no-peers h2').textContent = '在其他设备上打开本网站以传送文件';
     }
     $displayName.title = me.deviceName;
 });
@@ -94,7 +99,7 @@ class PeerUI {
 
     html() {
         return `
-            <label class="column center" title="Click to send files or right click to send a message">
+            <label class="column center" title="点击发送文件、右键发送消息">
                 <input type="file" multiple>
                 <x-icon shadow="1">
                     <svg class="icon"><use xlink:href="#"/></svg>
@@ -382,7 +387,7 @@ class ReceivedMsgsDialog extends Dialog {
     async _onCopy(e){
         e.preventDefault();
         await navigator.clipboard.writeText(e.target.closest('.MsgItem').querySelector('.MsgContent').textContent);
-        Events.fire('notify-user', 'Copied to clipboard');
+        Events.fire('notify-user', '已复制到剪切板');
     }
 
     html() {
@@ -390,7 +395,7 @@ class ReceivedMsgsDialog extends Dialog {
             <div class="MsgTextBox">
                 <div class="MsgContent"></div>
             </div>
-            <a herf="#" class="copy center" title="Copy to clipboard">
+            <a herf="#" class="copy center" title="复制到剪切板">
                 <svg>
                     <use xlink:href="#icon-copy" />
                 </svg>
@@ -497,7 +502,7 @@ class ReceiveTextDialog extends Dialog {
 
     async _onCopy() {
         await navigator.clipboard.writeText(this.$text.textContent);
-        Events.fire('notify-user', 'Copied to clipboard');
+        Events.fire('notify-user', '已复制到剪切板');
     }
 }
 
@@ -537,7 +542,7 @@ class Notifications {
                 Events.fire('notify-user', Notifications.PERMISSION_ERROR || 'Error');
                 return;
             }
-            this._notify('Notifications enabled.');
+            this._notify('通知功能已启用');
             this.$button.setAttribute('hidden', 1);
         });
     }
@@ -569,23 +574,19 @@ class Notifications {
     }
 
     _messageNotification(message) {
-        if (document.visibilityState !== 'visible') {
-            if (isURL(message)) {
-                const notification = this._notify(message, 'Click to open link');
-                this._bind(notification, e => window.open(message, '_blank', null, true));
-            } else {
-                const notification = this._notify(message, 'Click to copy text');
-                this._bind(notification, e => this._copyText(message, notification)); //Only work with blink core desktop browsers, like Chrome, Edge. 
-            }
+        if (isURL(message)) {
+            const notification = this._notify(message, '点击打开链接');
+            this._bind(notification, e => window.open(message, '_blank', null, true));
+        } else {
+            const notification = this._notify(message, '收到新消息（点击复制文本）');
+            this._bind(notification, e => this._copyText(message, notification)); //Only work with blink core desktop browsers, like Chrome, Edge. 
         }
     }
 
     _downloadNotification(message) {
-        if (document.visibilityState !== 'visible') {
-            const notification = this._notify(message, 'Click to download');
-            if (!window.isDownloadSupported) return;
-            this._bind(notification, e => this._download(notification));
-        }
+        const notification = this._notify(message, '点击下载');
+        if (!window.isDownloadSupported) return;
+        this._bind(notification, e => this._download(notification));
     }
 
     _download(notification) {
@@ -595,7 +596,7 @@ class Notifications {
 
     _copyText(message, notification) {
         notification.close();
-        newClipboard.writeText(message) ? this._notify('Copied text to clipboard') : this._notify('Copy failed, please return web page to copy.');
+        newClipboard.writeText(message) ? this._notify('已复制到剪切板') : this._notify('复制失败，请返回网页复制。');
     }
 
     _bind(notification, handler) {
@@ -618,11 +619,11 @@ class NetworkStatusUI {
     }
 
     _showOfflineMessage() {
-        Events.fire('notify-user', 'You are offline');
+        Events.fire('notify-user', '网络连接中断');
     }
 
     _showOnlineMessage() {
-        Events.fire('notify-user', 'You are back online');
+        Events.fire('notify-user', '网络连接恢复');
     }
 }
 
@@ -750,10 +751,7 @@ Events.on('load', () => {
 });
 
 Notifications.PERMISSION_ERROR = `
-Notifications permission has been blocked
-as the user has dismissed the permission prompt several times.
-This can be reset in Page Info
-which can be accessed by clicking the lock icon next to the URL.`;
+因用户拒绝授权，通知功能被禁用，您可点击网址栏左侧的小锁图标修改通知权限。`;
 
 document.body.onclick = e => { // safari hack to fix audio
     document.body.onclick = null;

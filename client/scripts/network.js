@@ -124,7 +124,7 @@ class ServerConnection {
 
     _onDisconnect() {
         console.log('WS: server disconnected');
-        Events.fire('notify-user', 'Connection lost. Retry in 5 seconds...');
+        Events.fire('notify-user', '连接断开，5秒后重试…');
         clearTimeout(this._reconnectTimer);
         this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
     }
@@ -266,7 +266,7 @@ class Peer {
         this._reader = null;
         this._busy = false;
         this._dequeueFile();
-        Events.fire('notify-user', 'File transfer completed.');
+        Events.fire('notify-user', '文件传送完成');
     }
 
     sendText(text) {
@@ -576,6 +576,7 @@ class Events {
 RTCPeer.config = {
     'sdpSemantics': 'unified-plan',
     'iceServers': [
-    {urls: 'turn:om.wulingate.com', username: 'hmzJ0OHZivkod703', credential: 'KDF04PBYD9xHAp0s' }
+    {urls: 'turn:zp.wulingate.com', username: 'hmzJ0OHZivkod703', credential: 'KDF04PBYD9xHAp0s' },
+    {urls: 'turn:km.wulingate.com', username: 'hmzJ0OHZivkod703', credential: 'KDF04PBYD9xHAp0s' }
     ]
 }

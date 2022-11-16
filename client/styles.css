@@ -89,7 +89,6 @@ body {
 h1 {
     font-size: 34px;
     font-weight: 400;
-    letter-spacing: -.01em;
     line-height: 40px;
     margin: 8px 0 0;
 }
@@ -268,7 +267,7 @@ x-peer[transfer] x-icon {
 }
 
 x-peer[transfer] .status:before {
-    content: 'Transferring...';
+    content: '正在传送…';
 }
 
 x-peer:not([transfer]) .status,
