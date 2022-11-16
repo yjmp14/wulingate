@@ -9,6 +9,8 @@ window.WeChat = /MicroMessenger|wxwork/.test(navigator.userAgent);
 // Browser compatibility alert. 
 if (window.WeChat){alert('WeChat Built-in browser doesn\'t support download, please tap ··· in the upper right corner and select Open in Browser.');}
 if (!window.isRtcSupported){alert('Current browser doesn\'t support this website\'s function, it\'s recommended to use Chrome, Edge, FireFox or Safari.');}
+// If user language is Chinese, show language switch button.
+if (navigator.language.substr(0,2) == 'zh'){$('language').removeAttribute('hidden');}
 
 // set display name, room icon and tip text. 
 Events.on('display-name', e => {
@@ -26,7 +28,7 @@ Events.on('display-name', e => {
         $displayNote.textContent = 'You can be discovered by everyone on this network';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
         $('room').title = 'Join or Create a Room';
-        $$('x-no-peers h2').textContent = 'Open Snapdrop on other devices to send files';
+        $$('x-no-peers h2').textContent = 'Open WulinGate on other devices to send files';
     }
     $displayName.title = me.deviceName;
 });
@@ -408,7 +410,7 @@ class ReceivedMsgsDialog extends Dialog {
         $('MsgsBox').prepend(this.$item);
         let msgsItem = $('MsgsBox').querySelectorAll('.MsgItem');
         if (msgsItem[20]) {$('MsgsBox').removeChild(msgsItem[20]);}
-        $('messages').style.display = 'flex';
+        $('messages').removeAttribute('hidden');
         let copyBtn = $('MsgsBox').querySelectorAll('.copy');
         for (let i=0; i < copyBtn.length; i++) {
             copyBtn[i].addEventListener("click", e => this._onCopy(e));
