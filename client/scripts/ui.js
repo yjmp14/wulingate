@@ -472,7 +472,7 @@ class InviteUserToRoomDialog extends Dialog {
     }
 
     _startExpirationCountdown() {
-        clearInterval(this.roomKeyExpirationInterval)
+        clearInterval(this.roomKeyExpirationInterval);
         clearTimeout(this.roomKeyExpirationTimeout);
         $('room-key-expires-time').innerText = `10:00`;
 
@@ -485,7 +485,13 @@ class InviteUserToRoomDialog extends Dialog {
             seconds = seconds.length === 2 ? seconds : "0" + seconds
             $('room-key-expires-time').innerText = `${minutes}:${seconds}`;
         }, 1000)
-        this.roomKeyExpirationTimeout = setTimeout(() => this.hide(), 600000);
+        this.roomKeyExpirationTimeout = setTimeout(this._endExpirationCountdown, 600000);
+    }
+
+    _endExpirationCountdown() {
+        this.hide();
+        clearInterval(this.roomKeyExpirationInterval);
+        clearTimeout(this.roomKeyExpirationTimeout);
     }
 
     _getShareRoomURL(permanent) {
@@ -518,6 +524,7 @@ class InviteUserToRoomDialog extends Dialog {
     }
 
     _deleteKeyRoom() {
+        this._endExpirationCountdown();
         let roomKey = sessionStorage.getItem("roomKey");
         sessionStorage.removeItem("roomKey");
         Events.fire('notify-user', `Key ${roomKey} invalidated.`)
@@ -972,7 +979,7 @@ Events.on('load', () => {
         drawCircles();
     }
     window.onresize = init;
-    Events.on('reconnect', () => init());
+    Events.on('display-name', init);
 
     function drawCircle(radius) {
         ctx.beginPath();
