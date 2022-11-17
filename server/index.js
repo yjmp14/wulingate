@@ -32,6 +32,7 @@ class SnapdropServer {
             this._joinKeyRoom(peer);
         }
         peer.socket.on('message', message => this._onMessage(peer, message));
+        peer.socket.on('error', console.error);
         this._keepAlive(peer);
 
         // send displayName

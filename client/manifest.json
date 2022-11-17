@@ -26,16 +26,6 @@
     }],
     "background_color": "#efefef",
     "start_url": "/",
-    "scope": "/",
-    "display": "standalone",
-    "theme_color": "#3367d6",
-    "share_target": {
-        "method":"GET",
-        "action": "/?share_target",
-        "params": {
-            "title": "title",
-            "text": "text",
-            "url": "url"
-        }
-    }
+    "display": "minimal-ui",
+    "theme_color": "#3367d6"
 }
