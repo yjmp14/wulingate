@@ -261,8 +261,11 @@ class Peer {
             this.roomId = incomeRoomId;
             this.roomIsIp = false;
         }
-        let roomKey = params.get("roomkey").replace(/\D/g,'');
-        if (roomKey.length === 6 && !isNaN(roomKey)) this.roomKey = roomKey;
+        let incomeRoomKey = params.get("roomkey");
+        if (incomeRoomKey) {
+            let roomKey = incomeRoomKey.replace(/\D/g, '');
+            if (roomKey.length === 6 && !isNaN(roomKey)) this.roomKey = roomKey;
+        }
     }
 
     _getIP(request) {
