@@ -12,7 +12,6 @@ process.on('SIGTERM', () => {
 })
 
 const parser = require('ua-parser-js');
-const { uniqueNamesGenerator, animals, colors } = require('unique-names-generator');
 
 class SnapdropServer {
 
@@ -20,7 +19,6 @@ class SnapdropServer {
         const WebSocket = require('ws');
         this._wss = new WebSocket.Server({ port: port });
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request)));
-        this._wss.on('headers', (headers, response) => this._onHeaders(headers, response));
 
         this._rooms = {};
 
@@ -38,15 +36,10 @@ class SnapdropServer {
             type: 'display-name',
             message: {
                 displayName: peer.name.displayName,
-                deviceName: peer.name.deviceName
+                deviceName: peer.name.deviceName,
+                room: peer.room
             }
         });
-    }
-
-    _onHeaders(headers, response) {
-        if (response.headers.cookie && response.headers.cookie.indexOf('peerid=') > -1) return;
-        response.peerId = Peer.uuid();
-        headers.push('Set-Cookie: peerid=' + response.peerId + "; SameSite=Strict; Secure");
     }
 
     _onMessage(sender, message) {
@@ -158,20 +151,18 @@ class SnapdropServer {
     }
 }
 
-
-
 class Peer {
 
     constructor(socket, request) {
         // set socket
         this.socket = socket;
 
+        // set peer id, code, room
+        this._setPeerValues(request);
 
         // set remote ip
         this._setIP(request);
 
-        // set peer id
-        this._setPeerId(request)
         // is WebRTC supported ?
         this.rtcSupported = request.url.indexOf('webrtc') > -1;
         // set name 
@@ -181,23 +172,29 @@ class Peer {
         this.lastBeat = Date.now();
     }
 
+    _setPeerValues(request) {
+        let params = (new URL(request.url, "http://server")).searchParams;
+        this.id = params.get("peerid");
+        this.code = params.get("code");
+        let incomeRoomId = params.get("roomid").replace(/\D/g,'');
+        if (incomeRoomId.length == 6) {
+            this.room = incomeRoomId;
+        }else {
+            this.room = '';
+        }
+    }
+
     _setIP(request) {
-        if (request.headers['x-forwarded-for']) {
+        if (this.room){
+            this.ip = this.room;
+        }else if (request.headers['x-forwarded-for']) {
             this.ip = request.headers['x-forwarded-for'].split(/\s*,\s*/)[0];
-        } else {
+        }else {
             this.ip = request.connection.remoteAddress;
         }
         // IPv4 and IPv6 use different values to refer to localhost
         if (this.ip == '::1' || this.ip == '::ffff:127.0.0.1') {
             this.ip = '127.0.0.1';
-        }
-    }
-
-    _setPeerId(request) {
-        if (request.peerId) {
-            this.id = request.peerId;
-        } else {
-            this.id = request.headers.cookie.replace('peerid=', '');
         }
     }
 
@@ -222,15 +219,9 @@ class Peer {
         }
 
         if(!deviceName)
-            deviceName = 'Unknown Device';
+            deviceName = 'Unknown';
 
-        const displayName = uniqueNamesGenerator({
-            length: 2,
-            separator: ' ',
-            dictionaries: [colors, animals],
-            style: 'capital',
-            seed: this.id.hashCode()
-        })
+        let displayName = this.code;
 
         this.name = {
             model: ua.device.model,
@@ -246,47 +237,11 @@ class Peer {
         return {
             id: this.id,
             name: this.name,
+            room: this.room,
             rtcSupported: this.rtcSupported
         }
     }
 
-    // return uuid of form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-    static uuid() {
-        let uuid = '',
-            ii;
-        for (ii = 0; ii < 32; ii += 1) {
-            switch (ii) {
-                case 8:
-                case 20:
-                    uuid += '-';
-                    uuid += (Math.random() * 16 | 0).toString(16);
-                    break;
-                case 12:
-                    uuid += '-';
-                    uuid += '4';
-                    break;
-                case 16:
-                    uuid += '-';
-                    uuid += (Math.random() * 4 | 8).toString(16);
-                    break;
-                default:
-                    uuid += (Math.random() * 16 | 0).toString(16);
-            }
-        }
-        return uuid;
-    };
 }
-
-Object.defineProperty(String.prototype, 'hashCode', {
-  value: function() {
-    var hash = 0, i, chr;
-    for (i = 0; i < this.length; i++) {
-      chr   = this.charCodeAt(i);
-      hash  = ((hash << 5) - hash) + chr;
-      hash |= 0; // Convert to 32bit integer
-    }
-    return hash;
-  }
-});
 
 const server = new SnapdropServer(process.env.PORT || 3000);

@@ -36,6 +36,7 @@ body {
 
 .row {
     display: flex;
+    justify-content: center;
     flex-direction: row;
 }
 
@@ -77,7 +78,6 @@ header {
     display: none !important;
 }
 
-
 /* Typography */
 
 body {
@@ -104,7 +104,8 @@ h2 {
 h3 {
     font-size: 20px;
     font-weight: 500;
-    margin: 16px 0;
+    margin: 10px 0;
+    color: var(--primary-color);
 }
 
 .font-subheading {
@@ -112,6 +113,10 @@ h3 {
     font-weight: 400;
     line-height: 24px;
     word-break: break-all;
+}
+
+x-dialog .font-subheading {
+    padding-bottom: 5px;
 }
 
 .font-body1,
@@ -132,8 +137,6 @@ a {
     cursor: pointer;
 }
 
-
-
 /* Icons */
 
 .icon {
@@ -141,8 +144,6 @@ a {
     height: var(--icon-size);
     fill: currentColor;
 }
-
-
 
 /* Shadows */
 
@@ -157,9 +158,6 @@ a {
         0 1px 10px 0 rgba(0, 0, 0, 0.12),
         0 2px 4px -1px rgba(0, 0, 0, 0.4);
 }
-
-
-
 
 /* Animations */
 
@@ -182,6 +180,7 @@ x-peers {
     overflow: hidden;
     flex-flow: row wrap;
     z-index: 2;
+    transition: color 300ms;
 }
 
 /* Empty Peers List */
@@ -203,8 +202,6 @@ x-no-peers a {
 x-peers:not(:empty)+x-no-peers {
     display: none;
 }
-
-
 
 /* Peer */
 
@@ -228,6 +225,7 @@ x-peer .name {
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
+    font-size: 18px;
 }
 
 input[type="file"] {
@@ -265,6 +263,11 @@ x-peer[transfer] x-icon {
     opacity: 0.7;
 }
 
+.device-name {
+    font-size: 14px;
+    white-space: nowrap;
+}
+
 x-peer[transfer] .status:before {
     content: 'Transferring...';
 }
@@ -292,8 +295,6 @@ x-peer[drop] x-icon {
     transform: scale(1.1);
 }
 
-
-
 /* Footer */
 
 footer {
@@ -304,11 +305,11 @@ footer {
     align-items: center;
     padding: 0 0 16px 0;
     text-align: center;
+    transition: color 300ms;
 }
 
 footer .logo {
     --icon-size: 80px;
-    margin-bottom: 8px;
     color: var(--primary-color);
 }
 
@@ -321,7 +322,6 @@ footer .font-body2 {
         margin-bottom: 16px;
     }
 }
-
 
 /* Dialog */
 
@@ -358,7 +358,7 @@ x-dialog:not([show]) x-background {
 }
 
 x-dialog .row-reverse>.button {
-    margin-top: 16px;
+    margin-top: 10px;
     margin-left: 8px;
 }
 
@@ -366,10 +366,106 @@ x-dialog a {
     color: var(--primary-color);
 }
 
+/* JoinRoom Dialog */
+
+#roomInput {
+    width: 100%;
+    text-align: center;
+    font-size: 30px;
+    letter-spacing: 5px;
+    padding: 4px 24px 4px 29px;
+}
+
+/* ReceivedMsgsDialog Dialog */
+
+#receivedMsgsDialog a.icon-button {
+    width: 37px;
+    height: 27px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: #888;
+    transition: color 300ms;
+}
+
+#receivedMsgsDialog a.icon-button:hover {
+    color: #fafafa;
+}
+
+#receivedMsgsDialog a.icon-button:before {
+    border-radius: 6px;
+    background: #c42b1c;
+}
+
+#receivedMsgsDialog a.icon-button:hover:before {
+    opacity: 1;
+}
+
+#receivedMsgsDialog a.icon-button>svg.icon {
+    width: 18px;
+    height: 18px;
+    z-index: 1;
+}
+
+#MsgsBox {
+    height:318px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* firefox scrollbar style */
+    scrollbar-width: thin;
+}
+
+.MsgItem {
+    margin: 8px 0;
+    position: relative;
+    padding: 3px 25px 3px 7px;
+    border: 1px solid #888;
+    border-radius: 5px;
+}
+
+.MsgTextBox {
+    height: 60px;
+    word-break: break-all;
+    overflow: hidden;
+}
+
+.MsgItem a.copy {
+    height: 100%; 
+    width: 24px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    fill: currentColor;
+    color: #888;
+    background: rgba(150, 150, 150, 0.15);
+    border-radius: 0 5px 5px 0;
+    transition: color 150ms;
+    transition: background 150ms;
+}
+
+.MsgItem a.copy:hover{
+    color: var(--primary-color);
+    background: rgba(66, 133, 244, 0.25);
+}
+
+.copy>svg {
+    width: 20px;
+    height: 20px;
+}
+
 /* Receive Dialog */
+
 #receiveDialog .row {
     margin-top: 24px;
     margin-bottom: 8px;
+}
+
+#fileName{
+    word-break: break-all;
+}
+
+#fileSize{
+    padding-bottom: 5px;
 }
 
 /* Receive Text Dialog */
@@ -458,12 +554,9 @@ x-dialog a {
     opacity: 0.2;
 }
 
-
-
 button::-moz-focus-inner {
     border: 0;
 }
-
 
 /* Icon Button */
 
@@ -476,8 +569,6 @@ button::-moz-focus-inner {
     border-radius: 50%;
 }
 
-
-
 /* Text Input */
 
 .textarea {
@@ -486,7 +577,7 @@ button::-moz-focus-inner {
     outline: none;
     padding: 16px 24px;
     border-radius: 16px;
-    margin: 8px 0;
+    margin: 10px 0;
     font-size: 14px;
     font-family: inherit;
     background: #f1f3f4;
@@ -497,7 +588,6 @@ button::-moz-focus-inner {
     line-height: 16px;
     max-height: 300px;
 }
-
 
 /* Info Animation */
 
@@ -553,7 +643,6 @@ button::-moz-focus-inner {
     margin: 8px 8px -16px;
 }
 
-
 /* Loading Indicator */
 
 .progress {
@@ -584,7 +673,6 @@ button::-moz-focus-inner {
 .over50 .circle.right {
     transform: rotate(180deg);
 }
-
 
 /* Generic placeholder */
 [placeholder]:empty:before {
@@ -623,7 +711,6 @@ x-toast:not([show]):not(:hover) {
     transform: translateY(100px);
 }
 
-
 /* Instructions */
 
 x-instructions {
@@ -642,7 +729,6 @@ x-instructions:before {
 x-peers:empty~x-instructions {
     opacity: 0;
 }
-
 
 /* Responsive Styles */
 
@@ -674,7 +760,6 @@ screen and (min-width: 1100px) {
 */
 @supports (-webkit-overflow-scrolling: touch) {
 
-    
     html {
         position: fixed;
     }
@@ -698,7 +783,7 @@ body {
 /* Dark theme colors */
 body.dark-theme {
     --text-color: #eee;
-    --bg-color: #121212;
+    --bg-color: #2B2C2F;
     --bg-color-secondary: #333;
 }
 
@@ -720,10 +805,10 @@ x-dialog x-paper {
 /* Image Preview */
 #img-preview{
     max-height: 50vh;
+    max-width: 100%;
     margin: auto;
     display: block;
 }
-
 
 /* Styles for users who prefer dark mode at the OS level */
 @media (prefers-color-scheme: dark) {
@@ -731,7 +816,7 @@ x-dialog x-paper {
     /* defaults to dark theme */
     body {
         --text-color: #eee;
-        --bg-color: #121212;
+        --bg-color: #2B2C2F;
         --bg-color-secondary: #333;
     }
 
@@ -755,3 +840,14 @@ x-dialog x-paper {
     }
 }
 
+/* webkit scrollbar style*/
+
+::-webkit-scrollbar{
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-thumb{
+    background: #bfbfbf;
+    border-radius: 4px;
+}
