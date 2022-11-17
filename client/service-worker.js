@@ -1,4 +1,4 @@
-var CACHE_NAME = 'snapdrop-cache-v2';
+var CACHE_NAME = 'snapdrop-cache-v3';
 var urlsToCache = [
     './',
     'index.html',
@@ -7,6 +7,7 @@ var urlsToCache = [
     'scripts/ui.js',
     'scripts/clipboard.js',
     'scripts/theme.js',
+    'scripts/qrcode.js',
     'sounds/blop.mp3',
     'images/favicon-96x96.png'
 ];
