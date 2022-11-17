@@ -21,12 +21,16 @@ class SnapdropServer {
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request)));
 
         this._rooms = {};
+        this._keyRooms = {};
 
         console.log('Snapdrop is running on port', port);
     }
 
     _onConnection(peer) {
         this._joinRoom(peer);
+        if (peer.roomKey) {
+            this._joinKeyRoom(peer);
+        }
         peer.socket.on('message', message => this._onMessage(peer, message));
         peer.socket.on('error', console.error);
         this._keepAlive(peer);
@@ -37,7 +41,9 @@ class SnapdropServer {
             message: {
                 displayName: peer.name.displayName,
                 deviceName: peer.name.deviceName,
-                room: peer.room
+                roomIsIp: peer.roomIsIp,
+                roomId: peer.roomId,
+                roomKey: peer.roomKey
             }
         });
     }
@@ -53,6 +59,7 @@ class SnapdropServer {
         switch (message.type) {
             case 'disconnect':
                 this._leaveRoom(sender);
+                this._leaveKeyRoom(sender);
                 break;
             case 'pong':
                 sender.lastBeat = Date.now();
@@ -60,9 +67,9 @@ class SnapdropServer {
         }
 
         // relay message to recipient
-        if (message.to && this._rooms[sender.ip]) {
+        if (message.to && this._rooms[sender.roomId]) {
             const recipientId = message.to; // TODO: sanitize
-            const recipient = this._rooms[sender.ip][recipientId];
+            const recipient = this._rooms[sender.roomId][recipientId];
             delete message.to;
             // add sender id
             message.sender = sender.id;
@@ -73,13 +80,13 @@ class SnapdropServer {
 
     _joinRoom(peer) {
         // if room doesn't exist, create it
-        if (!this._rooms[peer.ip]) {
-            this._rooms[peer.ip] = {};
+        if (!this._rooms[peer.roomId]) {
+            this._rooms[peer.roomId] = {};
         }
 
         // notify all other peers
-        for (const otherPeerId in this._rooms[peer.ip]) {
-            const otherPeer = this._rooms[peer.ip][otherPeerId];
+        for (const otherPeerId in this._rooms[peer.roomId]) {
+            const otherPeer = this._rooms[peer.roomId][otherPeerId];
             this._send(otherPeer, {
                 type: 'peer-joined',
                 peer: peer.getInfo()
@@ -88,8 +95,8 @@ class SnapdropServer {
 
         // notify peer about the other peers
         const otherPeers = [];
-        for (const otherPeerId in this._rooms[peer.ip]) {
-            otherPeers.push(this._rooms[peer.ip][otherPeerId].getInfo());
+        for (const otherPeerId in this._rooms[peer.roomId]) {
+            otherPeers.push(this._rooms[peer.roomId][otherPeerId].getInfo());
         }
 
         this._send(peer, {
@@ -98,27 +105,99 @@ class SnapdropServer {
         });
 
         // add peer to room
-        this._rooms[peer.ip][peer.id] = peer;
+        this._rooms[peer.roomId][peer.id] = peer;
     }
 
     _leaveRoom(peer) {
-        if (!this._rooms[peer.ip] || !this._rooms[peer.ip][peer.id]) return;
-        this._cancelKeepAlive(this._rooms[peer.ip][peer.id]);
+        if (!this._rooms[peer.roomId] || !this._rooms[peer.roomId][peer.id]) return;
+        this._cancelKeepAlive(this._rooms[peer.roomId][peer.id]);
 
         // delete the peer
-        delete this._rooms[peer.ip][peer.id];
+        delete this._rooms[peer.roomId][peer.id];
 
         peer.socket.terminate();
         //if room is empty, delete the room
-        if (!Object.keys(this._rooms[peer.ip]).length) {
-            delete this._rooms[peer.ip];
+        if (!Object.keys(this._rooms[peer.roomId]).length) {
+            delete this._rooms[peer.roomId];
         } else {
             // notify all other peers
-            for (const otherPeerId in this._rooms[peer.ip]) {
-                const otherPeer = this._rooms[peer.ip][otherPeerId];
+            for (const otherPeerId in this._rooms[peer.roomId]) {
+                const otherPeer = this._rooms[peer.roomId][otherPeerId];
                 this._send(otherPeer, { type: 'peer-left', peerId: peer.id });
             }
         }
+    }
+
+    _joinKeyRoom(peer) {
+        if (!peer.roomIsIp) {
+            //goal: create keyRoom
+            if (this._keyRooms[peer.roomKey]) {
+                // peer tries to create new keyRoom that already exists
+                this._send(peer, {
+                    type: 'key-room-full',
+                    roomKey: peer.roomKey
+                });
+                return;
+            }
+            this._keyRooms[peer.roomKey] = {};
+            this._send(peer, {
+                type: 'key-room-created',
+                roomKey: peer.roomKey
+            });
+            // add peer to room
+            this._keyRooms[peer.roomKey][peer.id] = peer;
+            // delete room automatically after 10 min
+            this.keyRoomTimer = setTimeout(() => this._deleteKeyRoom(peer.roomKey), 600000)
+        } else {
+            //goal: join keyRoom
+            if (!this._keyRooms[peer.roomKey]) {
+                // no keyRoom exists to roomKey -> invalid
+                this._send(peer, {
+                    type: 'key-room-invalid-room-key',
+                    roomKey: peer.roomKey
+                });
+                return;
+            }
+            // keyRoom exists and peer wants to join room
+            const firstPeer = Object.values(this._keyRooms[peer.roomKey])[0];
+            this._send(peer, {
+                type: 'key-room-room-id',
+                roomId: firstPeer.roomId
+            });
+            this._send(firstPeer, {
+                type: 'key-room-room-id-received',
+                roomKey: peer.roomKey
+            })
+        }
+    }
+
+    _leaveKeyRoom(peer) {
+        if (!this._keyRooms[peer.roomKey] || !this._keyRooms[peer.roomKey][peer.id]) return;
+
+        const firstPeerId = Object.keys(this._keyRooms[peer.roomKey])[0];
+
+        // delete the peer
+        delete this._keyRooms[peer.roomKey][peer.id];
+
+        //if room is empty or leaving peer is creating peer, delete the room
+        if (!Object.keys(this._keyRooms[peer.roomKey]).length || firstPeerId === peer.id) {
+            this._deleteKeyRoom(peer.roomKey);
+            clearTimeout(this.keyRoomTimer);
+        }
+    }
+
+    _deleteKeyRoom(roomKey) {
+        if (!this._keyRooms[roomKey]) return;
+
+        for (const peerId in this._keyRooms[roomKey]) {
+            const peer = this._keyRooms[roomKey][peerId];
+            this._send(peer, {
+                type: 'key-room-deleted',
+                roomKey: roomKey
+            });
+        }
+
+        delete this._keyRooms[roomKey];
     }
 
     _send(peer, message) {
@@ -160,9 +239,6 @@ class Peer {
         // set peer id, code, room
         this._setPeerValues(request);
 
-        // set remote ip
-        this._setIP(request);
-
         // is WebRTC supported ?
         this.rtcSupported = request.url.indexOf('webrtc') > -1;
         // set name 
@@ -176,30 +252,38 @@ class Peer {
         let params = (new URL(request.url, "http://server")).searchParams;
         this.id = params.get("peerid");
         this.code = params.get("code");
-        let incomeRoomId = params.get("roomid").replace(/\D/g,'');
-        if (incomeRoomId.length == 6) {
-            this.room = incomeRoomId;
-        }else {
-            this.room = '';
+        let incomeRoomId = params.get("roomid")
+
+        if (incomeRoomId === "null") {
+            this.roomId = this._getIP(request)
+            this.roomIsIp = true;
+        } else {
+            this.roomId = incomeRoomId;
+            this.roomIsIp = false;
+        }
+        let incomeRoomKey = params.get("roomkey");
+        if (incomeRoomKey) {
+            let roomKey = incomeRoomKey.replace(/\D/g, '');
+            if (roomKey.length === 6 && !isNaN(roomKey)) this.roomKey = roomKey;
         }
     }
 
-    _setIP(request) {
-        if (this.room){
-            this.ip = this.room;
-        }else if (request.headers['x-forwarded-for']) {
-            this.ip = request.headers['x-forwarded-for'].split(/\s*,\s*/)[0];
-        }else {
-            this.ip = request.connection.remoteAddress;
-        }
+    _getIP(request) {
+        let ip;
+        ip = request.headers['x-forwarded-for']
+            ? request.headers['x-forwarded-for'].split(/\s*,\s*/)[0]
+            : request.connection.remoteAddress;
+
         // IPv4 and IPv6 use different values to refer to localhost
-        if (this.ip == '::1' || this.ip == '::ffff:127.0.0.1') {
-            this.ip = '127.0.0.1';
+        if (ip == '::1' || ip == '::ffff:127.0.0.1') {
+            ip = '127.0.0.1';
         }
+
+        return ip;
     }
 
     toString() {
-        return `<Peer id=${this.id} ip=${this.ip} rtcSupported=${this.rtcSupported}>`
+        return `<Peer id=${this.id} roomId=${this.roomId} rtcSupported=${this.rtcSupported}>`
     }
 
     _setName(req) {
@@ -237,7 +321,6 @@ class Peer {
         return {
             id: this.id,
             name: this.name,
-            room: this.room,
             rtcSupported: this.rtcSupported
         }
     }

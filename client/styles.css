@@ -317,12 +317,6 @@ footer .font-body2 {
     color: var(--primary-color);
 }
 
-@media (min-height: 800px) {
-    footer {
-        margin-bottom: 16px;
-    }
-}
-
 /* Dialog */
 
 x-dialog x-background {
@@ -374,6 +368,27 @@ x-dialog a {
     font-size: 30px;
     letter-spacing: 5px;
     padding: 4px 24px 4px 29px;
+}
+
+/* InviteUserToRoom Dialog*/
+
+#room-key {
+    font-size: 50px;
+    margin: 15px;
+}
+
+#room-key-expires {
+    color: gray;
+}
+
+#room-key-expires-time {
+    font-weight: bold;
+    color:red;
+}
+
+#room-key-qr-code {
+    padding: inherit;
+    margin: 30px;
 }
 
 /* ReceivedMsgsDialog Dialog */

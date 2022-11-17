@@ -14,18 +14,28 @@ if (!window.isRtcSupported){alert('Current browser doesn\'t support this website
 Events.on('display-name', e => {
     const me = e.detail.message;
     const $displayName = $('displayName');
+    const $roomId = $('roomId');
     const $displayNote = $('displayNote');
     if (sessionStorage.getItem("roomId")){
-        $displayName.textContent = 'You are: ' + me.displayName + ' @ Room: ' + me.room;
+        $displayName.textContent = `You are: ${me.displayName}`;
+        $roomId.textContent = `Room: ${me.roomId}`;
+        $roomId.removeAttribute('hidden');
+        // $('footer').style("margin-bottom", "")
         $displayNote.textContent = 'You can be discovered by everyone in this room';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#exit');
         $('room').title = 'Exit The Room';
-        $$('x-no-peers h2').textContent = 'Input room number on other devices to send files';
+        $('share-room-url').removeAttribute('hidden');
+        $('invite-user').removeAttribute('hidden');
+        $$('x-no-peers h2').textContent = 'Input room key on other devices to send files';
     } else {
-        $displayName.textContent = 'Your device code is: ' + me.displayName;
+        $displayName.textContent = 'You are: ' + me.displayName;
+        $roomId.textContent = ``;
+        $roomId.setAttribute('hidden', 1);
         $displayNote.textContent = 'You can be discovered by everyone on this network';
         $('room').querySelector('svg use').setAttribute('xlink:href', '#enter');
         $('room').title = 'Join or Create a Room';
+        $('share-room-url').setAttribute('hidden', 1);
+        $('invite-user').setAttribute('hidden', 1);
         $$('x-no-peers h2').textContent = 'Open Snapdrop on other devices to send files';
     }
     $displayName.title = me.deviceName;
@@ -57,6 +67,7 @@ class PeersUI {
         const $peer = $(peerId);
         if (!$peer) return;
         $peer.remove();
+        if ($$('x-peers').children.length === 0) window.animateBackground(true);
     }
 
     _onFileProgress(progress) {
@@ -330,15 +341,62 @@ class JoinRoomDialog extends Dialog {
         super('joinRoomDialog');
         $('room').addEventListener('click', e => this._joinExit(e));
         this.$text = this.$el.querySelector('#roomInput');
-        const button = this.$el.querySelector('form');
-        button.addEventListener('submit', e => this._join(e));
+        let createJoinForm = this.$el.querySelector('form');
+        createJoinForm.addEventListener('submit', e => this._join(e));
+        this.$createJoinBtn = this.$el.querySelector('button');
+
+        this.$text.addEventListener('input', () => {
+            this.$text.value = this.$text.value.replace(/\D/g,'');
+            this.$createJoinBtn.textContent = this.$text.value.length === 6 ? 'Join' : 'Create';
+        })
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('room_id')) {
+            let inputNum = urlParams.get('room_id');
+            sessionStorage.setItem("roomId", inputNum);
+            PersistentStorage.set("roomId", inputNum).finally(() => {
+                window.history.replaceState({}, "title**", '/'); //remove room_id from url
+                Events.fire('reconnect');
+            }).catch((e) => console.log(e));
+        } else if (urlParams.has('room_key')) {
+            // leave room and join new room via key
+            let inputNum = urlParams.get('room_key');
+            sessionStorage.setItem("roomKey", inputNum);
+            sessionStorage.removeItem("roomId");
+            PersistentStorage.delete("roomId").finally(() => {
+                window.history.replaceState({}, "title**", '/'); //remove room_key from url
+                Events.fire('reconnect');
+            }).catch((e) => console.log(e));
+        }
+
+        //retrieve roomId from db and write to sessionStorage if not null/undefined
+        PersistentStorage.get('roomId')
+            .then((roomId) => {
+                if (roomId && !sessionStorage.getItem('roomId')) {
+                    sessionStorage.setItem('roomId', roomId);
+                    Events.fire('reconnect');
+                }
+            })
+            .catch(e => console.log(e));
+
+        Events.on('key-room-room-id', e => {
+            this.hide()
+            this.$text.value = '';
+            this.$createJoinBtn.textContent = 'Create';
+        });
+        Events.on('key-room-invalid-room-key', e => this._onInvalidRoomKey(e));
     }
 
     _joinExit(e) {
         e.preventDefault();
         if (sessionStorage.getItem("roomId")) {
+            sessionStorage.removeItem("roomKey");
             sessionStorage.removeItem("roomId");
-            location.reload();
+            PersistentStorage.delete('roomId')
+                .finally(() => {
+                    Events.fire('reconnect');
+                })
+                .catch(e => console.log(e));
         }else {
             this.show();
         }
@@ -349,14 +407,149 @@ class JoinRoomDialog extends Dialog {
         let inputNum = this.$text.value.replace(/\D/g,'');
         if (inputNum.length >= 6) {
             inputNum = inputNum.substring(0,6);
-            sessionStorage.setItem("roomId", inputNum);
-            location.reload();
+            sessionStorage.setItem("roomKey", inputNum);
+            sessionStorage.removeItem("roomId");
+            Events.fire('reconnect');
         }
         else {
-            inputNum = new ServerConnection()._randomNum(6);
-            sessionStorage.setItem("roomId", inputNum);
-            location.reload();
+            let roomKey = ServerConnection._randomNum(6);
+            let roomId = crypto.randomUUID();
+            sessionStorage.setItem("roomKey", roomKey);
+            sessionStorage.setItem("roomId", roomId);
+            PersistentStorage.set("roomId", roomId).finally(() => {
+                Events.fire('reconnect');
+                this.hide();
+                this.$text.value = '';
+                this.$createJoinBtn.textContent = 'Create';
+            }).catch(e => console.log(e));
         }
+    }
+
+    _onInvalidRoomKey(e) {
+        Events.fire('notify-user', `Key ${e.detail.roomKey} invalid`)
+    }
+}
+
+class InviteUserToRoomDialog extends Dialog {
+
+    constructor() {
+        super('inviteUserToRoomDialog');
+        const button = this.$el.querySelector('form');
+        button.addEventListener('submit', e => this._join(e));
+        $('share-room-url').addEventListener('click', () => this._shareRoomViaURL(true));
+        $('dialog-share-room-url').addEventListener('click', () => this._shareRoomViaURL(false));
+        $('invite-user').addEventListener('click', () => this._inviteUserToRoom());
+        $('delete-key-room').addEventListener('click', () => this._deleteKeyRoom());
+
+        Events.on('display-name', () => this._initDom());
+        Events.on('key-room-deleted', () => this._onKeyRoomDeleted());
+        Events.on('key-room-room-id-received', () => this._deleteKeyRoom());
+        Events.on('key-room-room-id', e => this._onRoomId(e));
+        Events.on('key-room-full', () => this._onKeyRoomFull());
+    }
+
+    _initDom() {
+        if (sessionStorage.getItem("roomKey") && sessionStorage.getItem("roomId")) {
+            this._startExpirationCountdown();
+            let roomKey = sessionStorage.getItem("roomKey");
+            $('room-key').innerText = `${roomKey.substring(0,3)} ${roomKey.substring(3,6)}`
+            // Display the QR code for the url
+            const qr = new QRCode({
+                content: this._getShareRoomURL(false),
+                width: 80,
+                height: 80,
+                padding: 0,
+                background: "transparent",
+                color: getComputedStyle(document.body).getPropertyValue('--text-color'),
+                ecl: "L",
+                join: true
+            });
+            $('room-key-qr-code').innerHTML = qr.svg();
+            this.show();
+        } else {
+            this.hide();
+        }
+    }
+
+    _startExpirationCountdown() {
+        clearInterval(this.roomKeyExpirationInterval);
+        clearTimeout(this.roomKeyExpirationTimeout);
+        $('room-key-expires-time').innerText = `10:00`;
+
+        let duration = 600;
+        this.roomKeyExpirationInterval = setInterval(() => {
+            duration -= 1;
+            let minutes = Math.floor(duration / 60).toString();
+            let seconds = (duration % 60).toString();
+            minutes = minutes.length === 2 ? minutes : "0" + minutes
+            seconds = seconds.length === 2 ? seconds : "0" + seconds
+            $('room-key-expires-time').innerText = `${minutes}:${seconds}`;
+        }, 1000)
+        this.roomKeyExpirationTimeout = setTimeout(this._endExpirationCountdown, 600000);
+    }
+
+    _endExpirationCountdown() {
+        this.hide();
+        clearInterval(this.roomKeyExpirationInterval);
+        clearTimeout(this.roomKeyExpirationTimeout);
+    }
+
+    _getShareRoomURL(permanent) {
+        let url = new URL(location.href);
+        if (permanent) {
+            url.searchParams.append('room_id', sessionStorage.getItem("roomId"))
+        } else {
+            url.searchParams.append('room_key', sessionStorage.getItem("roomKey"))
+        }
+        return url.href;
+    }
+
+    _shareRoomViaURL(permanent) {
+        navigator.clipboard.writeText(this._getShareRoomURL(permanent))
+            .then(() => {
+                Events.fire('notify-user', `${permanent ? "Permanent" : "Temporary"} URL copied to clipboard`);
+            })
+            .catch((e) => {
+                Events.fire('notify-user', 'Could not copy url to clipboard');
+                console.log(e)
+            });
+    }
+
+    _inviteUserToRoom() {
+        if (!sessionStorage.getItem("roomKey")) {
+            let roomKey = ServerConnection._randomNum(6);
+            sessionStorage.setItem("roomKey", roomKey);
+        }
+        Events.fire('reconnect');
+    }
+
+    _deleteKeyRoom() {
+        this._endExpirationCountdown();
+        let roomKey = sessionStorage.getItem("roomKey");
+        sessionStorage.removeItem("roomKey");
+        Events.fire('notify-user', `Key ${roomKey} invalidated.`)
+        Events.fire('reconnect');
+    }
+
+    _onKeyRoomDeleted() {
+        let roomKey = sessionStorage.getItem("roomKey");
+        sessionStorage.removeItem("roomKey");
+        Events.fire('notify-user', `Key ${roomKey} has expired.`);
+    }
+
+    _onRoomId(e) {
+        sessionStorage.removeItem("roomKey");
+        sessionStorage.setItem("roomId", e.detail.roomId);
+        PersistentStorage.set("roomId", e.detail.roomId).finally(() => {
+            Events.fire('reconnect');
+            Events.fire('notify-user', `Joined room successfully.`);
+        }).catch(e => console.log(e));
+    }
+
+    _onKeyRoomFull() {
+        let roomKey = ServerConnection._randomNum(6);
+        sessionStorage.setItem("roomKey", roomKey);
+        Events.fire('reconnect');
     }
 }
 
@@ -643,6 +836,80 @@ class WebShareTargetUI {
     }
 }
 
+class PersistentStorage {
+    constructor() {
+        const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+        DBOpenRequest.onerror = (e) => {
+            console.log('Error initializing database: ');
+            console.log(e)
+        };
+        DBOpenRequest.onsuccess = () => {
+            console.log('Database initialised.');
+        };
+        DBOpenRequest.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            db.onerror = (e) => console.log('Error loading database: ' + e);
+            const objectStore = db.createObjectStore('keyval');
+        }
+    }
+
+    static set(key, value) {
+        return new Promise((resolve, reject) => {
+            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            DBOpenRequest.onsuccess = (e) => {
+                const db = e.target.result;
+                const transaction = db.transaction('keyval', 'readwrite');
+                const objectStore = transaction.objectStore('keyval');
+                const objectStoreRequest = objectStore.put(value, key);
+                objectStoreRequest.onsuccess = (event) => {
+                    console.log(`Request successful. Added key-pair: ${key} - ${value}`);
+                    resolve();
+                };
+            }
+            DBOpenRequest.onerror = (e) => {
+                reject(e);
+            }
+        })
+    }
+
+    static get(key) {
+        return new Promise((resolve, reject) => {
+            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            DBOpenRequest.onsuccess = (e) => {
+                const db = e.target.result;
+                const transaction = db.transaction('keyval', 'readwrite');
+                const objectStore = transaction.objectStore('keyval');
+                const objectStoreRequest = objectStore.get(key);
+                objectStoreRequest.onsuccess = (event) => {
+                    console.log(`Request successful. Retrieved key-pair: ${key} - ${objectStoreRequest.result}`);
+                    resolve(objectStoreRequest.result);
+                };
+            }
+            DBOpenRequest.onerror = (e) => {
+                reject(e);
+            }
+        });
+    }
+
+    static delete(key) {
+        return new Promise((resolve, reject) => {
+            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            DBOpenRequest.onsuccess = (e) => {
+                const db = e.target.result;
+                const transaction = db.transaction('keyval', 'readwrite');
+                const objectStore = transaction.objectStore('keyval');
+                const objectStoreRequest = objectStore.delete(key);
+                objectStoreRequest.onsuccess = (event) => {
+                    console.log(`Request successful. Deleted key: ${key}`);
+                    resolve();
+                };
+            }
+            DBOpenRequest.onerror = (e) => {
+                reject(e);
+            }
+        })
+    }
+}
 
 class Snapdrop {
     constructor() {
@@ -654,6 +921,7 @@ class Snapdrop {
             const sendTextDialog = new SendTextDialog();
             const receiveTextDialog = new ReceiveTextDialog();
             const joinRoomDialog = new JoinRoomDialog();
+            const inviteUserToRoomDialog = new InviteUserToRoomDialog();
             const receivedMsgsDialog = new ReceivedMsgsDialog();
             const toast = new Toast();
             const notifications = new Notifications();
@@ -663,6 +931,7 @@ class Snapdrop {
     }
 }
 
+const persistentStorage = new PersistentStorage();
 const snapdrop = new Snapdrop();
 
 if ('serviceWorker' in navigator) {
@@ -703,12 +972,14 @@ Events.on('load', () => {
         c.height = h;
         let offset = h > 420 ? 90 : 72;
         offset = h > 800 ? 106 : offset;
+        offset += sessionStorage.getItem('roomId') ? 20 : 0;
         x0 = w / 2;
         y0 = h - offset;
         dw = Math.max(w, h, 1000) / 13;
         drawCircles();
     }
     window.onresize = init;
+    Events.on('display-name', init);
 
     function drawCircle(radius) {
         ctx.beginPath();
